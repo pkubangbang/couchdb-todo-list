@@ -1,0 +1,1 @@
+export const db = new PouchDB('ird-todo-list');

@@ -1,0 +1,4 @@
+{
+    "name": "@scope/utils",
+    "exports": "./mod.ts"
+}

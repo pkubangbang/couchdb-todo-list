@@ -1,3 +1,24 @@
 {
-    "workspace": ["apps/*"]
+    "workspace": [
+        "apps/*",
+        "packages/*"
+    ],
+    "compilerOptions": {
+        "lib": [
+            "ES2022",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "jsx": "react-jsx",
+        "jsxImportSource": "react",
+        "jsxImportSourceTypes": "@types/react"
+    },
+    "imports": {
+        "immer": "npm:immer@^10.2.0",
+        "vite": "npm:vite@^7.2.7",
+        "react": "npm:react@^17.0.0",
+        "react-dom": "npm:react-dom@^17.0.0",
+        "@types/react": "npm:@types/react@^17.0.0",
+        "@types/react-dom": "npm:@types/react-dom@^17.0.0"
+    }
 }

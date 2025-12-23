@@ -1,10 +1,13 @@
 import './index.css'
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import ReactDOM from 'react-dom';
+
+import { Provider, teamsTheme } from '@fluentui/react-northstar'
+
 import App from './App.tsx'
 
-createRoot(document.getElementById('root') as HTMLElement).render(
-  <StrictMode>
+ReactDOM.render(
+  <Provider theme={teamsTheme}>
     <App />
-  </StrictMode>,
+  </Provider>,
+  document.getElementById('root')
 )

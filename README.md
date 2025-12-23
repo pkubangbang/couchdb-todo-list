@@ -47,3 +47,19 @@ deno task --cwd apps/todo-list dev
 ```
 
 
+## Known Issues
+
+### 1. installing pouchdb
+`pouchdb` is the couchdb js-client. It is a legacy project that uses common-js as the module system.
+
+To use pouchdb inside deno + vite + react, here is my way:
+1. add a script tag inside `index.html` at the end of the body.
+2. install several `@types/pouchdb-xxx` packages via `deno install npm:xxx`
+3. add a directive on top of `vite-env.d.ts`, then add a type declaraion inside the same file that says "here is a global `PouchDB` available"
+   ```ts
+   // apps/todo-list/src/vite-env.d.ts
+   // ...
+
+   /// <reference types="@types/pouchdb" />
+   declare var PouchDB: PouchDB.Static;
+   ```
