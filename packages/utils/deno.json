@@ -1,4 +1,7 @@
 {
     "name": "@scope/utils",
-    "exports": "./mod.ts"
+    "exports": "./mod.ts",
+    "imports": {
+        "use-sync-external-store": "npm:use-sync-external-store@^1.6.0"
+    }
 }
