@@ -32,7 +32,7 @@ This approach has worked quite well. Since I am learning couchdb now, I realize 
 5. A project once opened should show the latest sprint; other sprints could also be selected.
 6. A sprint should have name, due date and description with it.
 7. A sprint once opened should list out all the containing tasks; each task is editable.
-8. A task should contain 8 fields:
+8. A task should contain 9 fields:
    1. task create time: a date notation, or more specifically a date-time
    2. module: a string
    3. type of task: a selection out of drop down options
@@ -57,3 +57,48 @@ This approach has worked quite well. Since I am learning couchdb now, I realize 
 6. To represent task, a `doc` with `type=task` is used. A special field `task_id` is used to trace the progress across rotations.
 7. When rotating, a new sprint-doc is created and the related task will be copied and linked with the new sprint_id.
 
+## conflict model
+
+A particular interesting and important part when designing couchdb schema is to think about its conflict model, 
+which boils down to two questions: 
+
+1. **"Why do two (or more) documents of the same id exist?"**
+2. **"How to resolve the conflict? Merge, Prompt, Pick one or Don't bother?"**
+   - Merge: Show the result of merge by some business logic, together with a button for prompt.
+   - Prompt: Display a conflicting state and let user resolve.
+   - Pick one: Just pick one as winner without merge, together with a button for prompt.
+   - Don't bother: Do not fetch conflicts. Rely on couchdb to choose the winner.
+
+Let's examine each type of doc.
+
+### The project doc
+Project doc contains name, description, participants and sprint_ids.
+
+Why do two documents of the same id exist? Because two writes to the same project doc happens separately.
+
+This is a normal scenario. To resolve the conflict, we choose `Merge`:
+- The project name, description is the winner's
+- The participants should be deep-merged: each person will receive merged role.
+- The sprint_ids should be merged, **otherwise there will be some sprint left behind.**
+- The prompt button should show on the project page, rather than the task page.
+
+### The sprint doc
+Sprint doc contains just name and due_time.
+
+Why do two documents of the same id exist? Because two writes to the same sprint doc happens separately.
+
+This is abnormal, since changing the sprint name / due_time should only be meaningful when the user is online.
+
+Or put it another way: to change the sprint, the user should send request to the remote server directly; 
+otherwise the user can only create/delete the sprint without changing it.
+
+In this pattern, to resolve the conflict, we choose *`Don't bother`.
+
+### The task doc
+Task doc contains 9 visible fields together with a task_id which tracks the evolution between sprints.
+
+Why do two tasks with the same id (_id) exists? Because people will edit tasks.
+
+This is the common case. To resolve the conflict, we choose `Prompt`:
+- Show conflicting tasks in line-by-line order together with other normal tasks, with a merge button at the start.
+- When clicking on the merge button, the user is expect to provide the merge result, thus resolving the conflicts.
