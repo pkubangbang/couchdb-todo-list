@@ -1649,6 +1649,11 @@
           "npm:wouter@^3.9.0"
         ]
       },
+      "packages/patches": {
+        "dependencies": [
+          "npm:@fluentui/react-northstar@~0.71.1"
+        ]
+      },
       "packages/utils": {
         "dependencies": [
           "npm:use-sync-external-store@^1.6.0"

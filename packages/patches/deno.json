@@ -1,0 +1,7 @@
+{
+    "name": "@scope/patches",
+    "exports": "./mod.ts",
+    "imports": {
+        "@fluentui/react-northstar": "npm:@fluentui/react-northstar@^0.71.1"
+    }
+}

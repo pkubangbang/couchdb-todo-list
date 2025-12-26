@@ -1,7 +1,10 @@
-import { Button, Card, CardBody, Flex } from "@fluentui/react-northstar";
-import { Redirect, Route, Switch, useLocation } from 'wouter';
+import { Redirect, Route, Switch } from 'wouter';
+import { LoginPage } from "./components/LoginPage.tsx";
 import { TaskPage } from "./components/TaskPage.tsx";
-import { useProjectStore } from "./utils/useProjectStore.ts";
+import { WelcomePage } from './components/WelcomePage.tsx';
+
+import { ProjectPage } from "./components/ProjectPage.tsx";
+import { StarBackground } from "./components/StarBackground.tsx";
 
 interface Project {
   name: string,
@@ -11,38 +14,23 @@ interface Project {
 }
 
 function App() {
-
-  const { status, projects } = useProjectStore();
-  const [_location, navigate] = useLocation();
-
-  const goTaskPage = (project: string) => {
-    const validRegex = /^[a-z][0-9a-z-]*$/;
-    if (!validRegex.test(project)) {
-      return;
-    }
-
-    navigate(`/projects/${project}/tasks`);
-  }
-
   return <Switch>
     <Route path="/projects">
-      {status === 'not-started' ? <h1>Starting...</h1> : <Flex column>
-        <h1>Welcome to TODO list! CouchDB status: {status}</h1>
-        <Flex gap="gap.small">
-          {projects.map(proj => (<Card key={proj.code}>
-            <CardBody>
-              <h1>{proj.code}</h1>
-              <h2>{proj.name}</h2>
-              <p>{proj.desc}</p>
-              <Button content="Go" primary onClick={() => goTaskPage(proj.code)} />
-            </CardBody>
-          </Card>))}
-        </Flex>
-      </Flex>}
+      <ProjectPage />
     </Route>
     <Route path="/projects/:project/tasks" component={TaskPage} />
-    {/* redirect to home if no route match */}
-    <Redirect to="/projects"></Redirect>
+    <Route path="/" nest>
+      <StarBackground>
+        <Route path="/welcome">
+          <WelcomePage />
+        </Route>
+        <Route path="/login">
+          <LoginPage />
+        </Route>
+      </StarBackground>
+      {/* redirect to home if no route match */}
+      <Redirect to="/welcome"></Redirect>
+    </Route>
   </Switch>
 }
 
