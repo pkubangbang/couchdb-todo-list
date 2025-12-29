@@ -6,13 +6,6 @@ import { WelcomePage } from './components/WelcomePage.tsx';
 import { ProjectPage } from "./components/ProjectPage.tsx";
 import { StarBackground } from "./components/StarBackground.tsx";
 
-interface Project {
-  name: string,
-  desc: string,
-  code: string,
-  type: string
-}
-
 function App() {
   return <Switch>
     <Route path="/projects">

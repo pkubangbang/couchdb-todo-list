@@ -12,6 +12,7 @@
     "@types/pouchdb": "npm:@types/pouchdb@^6.4.2",
     "@types/pouchdb-browser": "npm:@types/pouchdb-browser@^6.1.5",
     "@types/pouchdb-core": "npm:@types/pouchdb-core@^7.0.15",
+    "@types/pouchdb-find": "npm:@types/pouchdb-find@^7.3.3",
     "@types/pouchdb-http": "npm:@types/pouchdb-http@^6.1.5",
     "@types/pouchdb-replication": "npm:@types/pouchdb-replication@^6.4.7",
     "@vitejs/plugin-react": "npm:@vitejs/plugin-react@^5.1.2",
