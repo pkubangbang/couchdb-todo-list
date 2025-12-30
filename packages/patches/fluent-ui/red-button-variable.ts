@@ -1,7 +1,7 @@
 import type { SiteVariablesPrepared } from "@fluentui/react-northstar";
 
 export const redButtonVariables = (siteVariables: SiteVariablesPrepared) => {
-    console.log(siteVariables);
+    // console.log(siteVariables);
   const { red, white } = siteVariables.colorScheme;
 
   return {

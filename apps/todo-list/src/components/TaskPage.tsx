@@ -1,8 +1,10 @@
-import { Box, Button, ButtonProps, ChevronStartIcon, Flex, Input, Pill } from "@fluentui/react-northstar";
-import { FC, useEffect, useState } from "react";
-import { useLocation } from "wouter";
-import { useProjectStore } from "../utils/useProjectStore.ts";
 import { css } from "@emotion/css";
+import { Box, Button, ButtonProps, ChevronStartIcon, Flex, Input, Pill } from "@fluentui/react-northstar";
+import { FC, useContext, useEffect, useState } from "react";
+import { useLocation } from "wouter";
+import { useDbChangeListener } from "../utils/useDbChangeListener.ts";
+import { dbContext } from "./DbProvider.tsx";
+import { useAutoTrigger } from "@scope/utils";
 
 export interface TaskPageProps {
     params: {
@@ -29,18 +31,89 @@ const taskPageStyle = css`
     }
 `;
 
+
+function projectSelector(doc: object) {
+    return ('type' in doc) && doc.type === 'project';
+}
+
+function sprintSelector(doc: object) {
+    return ('type' in doc) && doc.type === 'sprint';
+}
+
+function taskSelector(doc: object) {
+    return ('type' in doc) && doc.type === 'task';
+}
+
+type SprintWithId = Sprint & PouchDB.Core.IdMeta;
+
 export const TaskPage: FC<TaskPageProps> = ({ params }) => {
-    const { project } = params;
+    const code = params.project;
     const [location, navigate] = useLocation();
+    const db = useContext(dbContext);
+
+    const projectListener = useDbChangeListener(db, projectSelector);
+    const sprintListener = useDbChangeListener(db, sprintSelector);
+    const taskListener = useDbChangeListener(db, taskSelector);
+
+    const [projectStatus, selectedProject, projectError] = useAutoTrigger<Project>(() => {
+        return (db as PouchDB.Database<Project>).find({
+            selector: { type: 'project', code: code }
+        }).then(result => {
+            const found = result.docs.find(proj => proj.code === code);
+            if (!found) {
+                throw new Error(`project ${code} not found`);
+            }
+
+            return found;
+        });
+    }, [db, code, projectListener])
+
+    const [sprintStatus, sprints, sprintError] = useAutoTrigger<SprintWithId[]>(() => {
+        const sprintIds = selectedProject?.sprint_ids ?? [];
+        if (!sprintIds.length) { return Promise.resolve([]); }
+
+        return (db as PouchDB.Database<SprintWithId>).allDocs({
+            keys: sprintIds,
+            include_docs: true
+        }).then(result => {
+            const s: SprintWithId[] = [];
+            let hasError = false;
+            for (const item of result.rows) {
+                if ('doc' in item && item.doc) {
+                    s.push(item.doc);
+                } else {
+                    hasError = true;
+                }
+            }
+
+            if (hasError) {
+                console.error(`error when fetching sprints from project`);
+            }
+
+            return s;
+        });
+    }, [db, selectedProject, sprintListener])
 
     const goHome: ButtonProps['onClick'] = () => {
-        navigate('/projects');
+        navigate('~/projects');
     }
 
-    const { projects, sprints, tasks } = useProjectStore();
-    const selectedProject = projects.find(proj => proj.code === project);
-
     const [selectedSprintId, setSelectedSprintId] = useState('');
+
+    const [taskStatus, tasks] = useAutoTrigger(() => {
+        if (!selectedSprintId) {
+            return Promise.reject('no selected sprint');
+        }
+
+        return (db as PouchDB.Database<Task>).find({
+            selector: {
+                type: 'task',
+                sprint_id: selectedSprintId
+            }
+        }).then(result => {
+            return result.docs;
+        })
+    }, [db, selectedSprintId, taskListener]);
 
     useEffect(() => {
         // Specify the default open sprint (when project data is ready)
@@ -52,26 +125,20 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
 
     if (!selectedProject) {
         return <>
-            <h1>Project {project} not found!</h1>
+            <h1>Project {code} not found!</h1>
             <Button content="Back home" primary onClick={goHome}></Button>
         </>
     }
 
-    const sprintsOfProject = selectedProject.sprint_ids.map(sid => {
-        return sprints[sid];
-    });
-
-    const taskInSprint = tasks.filter(t => t.sprint_id === selectedSprintId);
-
     return <Flex className={taskPageStyle} column>
         <Flex gap="gap.medium" vAlign="center">
             <Button primary onClick={goHome} icon={<ChevronStartIcon />} iconOnly />
-            <h2>Good. Task page of {project}.</h2>
+            <h2>Good. Task page of {code}.</h2>
         </Flex>
         <p>{`The current page is: ${location}`}</p>
 
-        <Box className="task-body">
-            {taskInSprint.map(task => <Flex key={task.task_id}>
+        {tasks && <Box className="task-body">
+            {tasks.map(task => <Flex key={task.task_id}>
                 <Input value={task.create_time}></Input>
                 <Input value={task.module}></Input>
                 <Input value={task.type_of_task}></Input>
@@ -83,11 +150,11 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
                 <Input value={task.eta}></Input>
                 <Input value={task.progress}></Input>
             </Flex>)}
-        </Box>
+        </Box>}
 
-        <Flex className="status-line">{sprintsOfProject.map(sprint => <Button key={sprint._id}
+        {sprints && <Flex className="status-line">{sprints.map(sprint => <Button key={sprint._id}
             content={sprint.name} primary={sprint._id === selectedSprintId}
             onClick={() => { setSelectedSprintId(sprint._id) }}
-        />)}</Flex>
+        />)}</Flex>}
     </Flex>
 }

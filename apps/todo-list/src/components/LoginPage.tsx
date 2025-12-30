@@ -1,7 +1,8 @@
-import { Button, Flex, Form, FormField, Header, Input } from "@fluentui/react-northstar";
+import { Button, Flex, Form, FormField, Header, Input, ThumbtackIcon } from "@fluentui/react-northstar";
 import { useLocation } from "wouter";
 import React, { FC } from "react";
 import { css } from "@emotion/css";
+import { dbClient } from "../utils/dbClient.ts";
 
 const loginPageStyle = css`
     width: 300px;
@@ -25,25 +26,43 @@ export const LoginPage: FC = () => {
 
     const [, navigate] = useLocation();
 
-    const onSubmit = () => {
-        // handle login logic here
-        console.log({ server, username, password });
-        navigate('/projects');
+    const onSubmit = async () => {
+        // console.log({ server, username, password });
+        try {
+            await dbClient.connect(server, username, password);
+            navigate('/projects');
+        } catch (e) {
+            console.error(e);
+            alert('server not available');
+        }
     };
 
     const goToWelcome = () => {
         navigate('/welcome');
     }
 
+    const fillAndGo = () => {
+        setServer('http://10.0.1.1:5984/ird-todo-list');
+        setUsername(import.meta.env.VITE_APP_COUCHDB_USERNAME);
+        setPassword(import.meta.env.VITE_APP_COUCHDB_PASSWORD);
+    }
+
     return <Flex className={loginPageStyle} column>
         <Header content="Please login." />
+        {import.meta.env.DEV && <Button size="small"
+            content="dev: go 10.0.1.1" icon={<ThumbtackIcon />} 
+            onClick={fillAndGo} tinted style={{ marginBottom: 12 }} />}
         <Form className="login-form" onSubmit={onSubmit}>
             <FormField label="Database address" control={
                 <Input
                     fluid
                     placeholder="https://example.com:5984/db"
                     value={server}
-                    onChange={(_, data) => setServer(data.value as string)}
+                    onChange={(_, data) => {
+                        if (typeof data?.value !== 'undefined') {
+                            setServer(data.value as string)
+                        }
+                    }}
                 />
             } />
 
@@ -53,7 +72,11 @@ export const LoginPage: FC = () => {
                     <Input
                         fluid
                         value={username}
-                        onChange={(_, data) => setUsername(data.value as string)}
+                        onChange={(_, data) => {
+                            if (typeof data?.value !== 'undefined') {
+                                setUsername(data.value as string)
+                            }
+                        }}
                     />
                 }
             />
@@ -65,7 +88,11 @@ export const LoginPage: FC = () => {
                         fluid
                         type="password"
                         value={password}
-                        onChange={(_, data) => setPassword(data.value as string)}
+                        onChange={(_, data) => {
+                            if (typeof data?.value !== 'undefined') {
+                                setPassword(data.value as string)
+                            }
+                        }}
                     />
                 }
             />
