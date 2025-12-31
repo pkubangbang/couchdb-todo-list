@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { useDbChangeListener } from "../utils/useDbChangeListener.ts";
 import { dbContext } from "./DbProvider.tsx";
 import { useAutoTrigger } from "@scope/utils";
+import { fetchConflictingProjectsAndShowMergedResult } from "../utils/dataMerger.ts";
 
 export interface TaskPageProps {
     params: {
@@ -44,8 +45,6 @@ function taskSelector(doc: object) {
     return ('type' in doc) && doc.type === 'task';
 }
 
-type SprintWithId = Sprint & PouchDB.Core.IdMeta;
-
 export const TaskPage: FC<TaskPageProps> = ({ params }) => {
     const code = params.project;
     const [location, navigate] = useLocation();
@@ -55,8 +54,8 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
     const sprintListener = useDbChangeListener(db, sprintSelector);
     const taskListener = useDbChangeListener(db, taskSelector);
 
-    const [projectStatus, selectedProject, projectError] = useAutoTrigger<Project>(() => {
-        return (db as PouchDB.Database<Project>).find({
+    const [projectStatus, selectedProject] = useAutoTrigger<Doc<Project>>(() => {
+        return (db as PouchDB.Database<Doc<Project>>).find({
             selector: { type: 'project', code: code }
         }).then(result => {
             const found = result.docs.find(proj => proj.code === code);
@@ -64,23 +63,25 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
                 throw new Error(`project ${code} not found`);
             }
 
-            return found;
-        });
+            return fetchConflictingProjectsAndShowMergedResult(db, [found]);
+        }).then(projects => projects[0]);
     }, [db, code, projectListener])
 
-    const [sprintStatus, sprints, sprintError] = useAutoTrigger<SprintWithId[]>(() => {
+    const [sprintStatus, sprints] = useAutoTrigger<Doc<Sprint>[]>(() => {
         const sprintIds = selectedProject?.sprint_ids ?? [];
         if (!sprintIds.length) { return Promise.resolve([]); }
 
-        return (db as PouchDB.Database<SprintWithId>).allDocs({
+        return (db as PouchDB.Database<Doc<Sprint>>).allDocs({
             keys: sprintIds,
             include_docs: true
         }).then(result => {
-            const s: SprintWithId[] = [];
+            const s: Doc<Sprint>[] = [];
             let hasError = false;
             for (const item of result.rows) {
                 if ('doc' in item && item.doc) {
                     s.push(item.doc);
+                } else if ('error' in item && item.error === 'not_found') {
+                    // no-op
                 } else {
                     hasError = true;
                 }

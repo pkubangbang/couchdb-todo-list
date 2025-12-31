@@ -15,13 +15,22 @@ type DateTimeLike = string & {
     _comment: 'please parse using dayjs()'
 }
 
+interface DocMeta {
+    _id: string,
+    _rev: string,
+    _conflicts: string[]
+}
+
+type Doc<T extends object> = DocMeta & T;
+
 interface Project {
     type: 'project',
     name: string,
     code: string,
     desc?: string,
     participants: Record<string, Role[]>,
-    sprint_ids: string[]
+    sprint_ids: string[],
+    hasConflict?: boolean
 }
 
 interface Sprint {

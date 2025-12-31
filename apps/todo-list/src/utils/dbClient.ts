@@ -18,10 +18,16 @@ interface DbMeta {
   version: string;
 }
 
+// dev tools
 declare global {
   interface Window {
     $db: DbClient;
     $restoreDefault: () => void;
+    $createConflict: (
+      id: string,
+      part1: Record<string, unknown>,
+      part2: Record<string, unknown>,
+    ) => void;
   }
 }
 
@@ -43,11 +49,46 @@ class DbClient {
     // dev tools
     if (import.meta.env.DEV) {
       setTimeout(() => {
+        /**
+         * use `$db` to get hold of the dbClient on the console.
+         */
         window.$db = dbClient;
       }, 0);
+      /**
+       * destroy the default db and re-create a new one.
+       */
       window.$restoreDefault = () => {
         this.restoreDefaultDb();
-      }
+      };
+      /**
+       * Reliably create conflict documents for a particular doc specified by id.
+       * 
+       * The mechanism is create a temporary db and sync once with the target db,
+       * then do different updates on both sides, then sync again.
+       * 
+       * Used mainly for testing the conflict resolving process.
+       * 
+       * @param id the id of the doc inside local database.
+       * @param part1 changes made to the target database
+       * @param part2 changes made to the temporary database, effectively create conflicts.
+       */
+      window.$createConflict = async (id, part1, part2) => {
+        const v1 = await this.workingDb.get(id);
+        const tempDb = new PouchDB("dev-temp");
+        tempDb.sync(this.workingDb).on("complete", () => {
+          console.log('sync1 complete');
+          const v1a = Object.assign({}, v1, part1);
+          const v1b = Object.assign({}, v1, part2);
+
+          Promise.all([this.workingDb.put(v1a), tempDb.put(v1b)]).then((result) => {
+            console.log(result);
+            tempDb.sync(this.workingDb).on("complete", () => {
+              console.log('sync2 complete. Ready to destroy tempDb');
+              tempDb.destroy();
+            });
+          })
+        });
+      };
     }
   }
 
@@ -163,6 +204,17 @@ class DbClient {
     }
   }
 
+  /**
+   * get the username & password from localstorage.
+   * 
+   * NOTE: we deliberately store the password because this is the only way
+   * of reliably connecting to the couchdb server over HTTP/HTTPS. 
+   * 
+   * The localstorage is used instead of the default db because
+   * it's synchronous, thus simplify the code.
+   * 
+   * @returns 
+   */
   getCredential() {
     const credentialAsJson = localStorage.getItem(
       import.meta.env.VITE_CREDENTIAL_KEY,

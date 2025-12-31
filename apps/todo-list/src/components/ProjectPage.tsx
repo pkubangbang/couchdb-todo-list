@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, Flex, Text } from "@fluentui/react-northstar";
+import { Button, Card, CardBody, ErrorIcon, Flex, Text } from "@fluentui/react-northstar";
 import { redButtonVariables } from "@scope/patches";
 import { useLocation } from "wouter";
 import { dbClient } from "../utils/dbClient.ts";
@@ -6,6 +6,7 @@ import { useConnectionStatusStore } from "../utils/useDbConnectionStore.ts";
 import { useContext } from "react";
 import { dbContext } from "./DbProvider.tsx";
 import { useAutoTrigger } from "@scope/utils";
+import { fetchConflictingProjectsAndShowMergedResult } from "../utils/dataMerger.ts";
 
 
 export const ProjectPage = () => {
@@ -16,7 +17,10 @@ export const ProjectPage = () => {
             selector: {
                 type: 'project'
             }
-        }).then(result => result.docs);
+        }).then(result => {
+            const filterd = result.docs as Doc<Project>[];
+            return fetchConflictingProjectsAndShowMergedResult(db, filterd);
+        });
     }, [db, replicationStatus]);
 
     const [_location, navigate] = useLocation();
@@ -46,9 +50,11 @@ export const ProjectPage = () => {
         {status === 'success' ? <Flex gap="gap.small">
             {(projects ?? []).map(proj => (<Card key={proj.code}>
                 <CardBody>
-                    <h1>{proj.code}</h1>
+                    <h1>{proj.code} {proj.hasConflict && 
+                        <Button iconOnly icon={<ErrorIcon />} />}</h1>
                     <h2>{proj.name}</h2>
                     <p>{proj.desc}</p>
+                    <p>{proj.sprint_ids.join(', ')}</p>
                     <Button content="Go" primary onClick={() => goTaskPage(proj.code)} />
                 </CardBody>
             </Card>))}
