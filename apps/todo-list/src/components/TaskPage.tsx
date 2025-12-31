@@ -4,16 +4,15 @@ import {
   Button,
   ButtonProps,
   ChevronStartIcon,
-  Flex,
-  Input,
-  Pill
+  Flex
 } from '@fluentui/react-northstar';
+import { useAutoTrigger } from '@scope/utils';
 import { FC, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
+import { fetchConflictingProjectsAndShowMergedResult, fetchConflictingTasksAndShowMergedResult } from '../utils/dataMerger.ts';
 import { useDbChangeListener } from '../utils/useDbChangeListener.ts';
 import { dbContext } from './DbProvider.tsx';
-import { useAutoTrigger } from '@scope/utils';
-import { fetchConflictingProjectsAndShowMergedResult } from '../utils/dataMerger.ts';
+import { TaskRowDisplay } from './TaskRowDisplay.tsx';
 
 export interface TaskPageProps {
   params: {
@@ -119,7 +118,8 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
         sprint_id: selectedSprintId
       }
     }).then((result) => {
-      return result.docs;
+      const filtered = result.docs as Doc<Task>[];
+      return fetchConflictingTasksAndShowMergedResult(db, filtered);
     });
   }, [db, selectedSprintId, taskListener]);
 
@@ -153,22 +153,7 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
 
       {tasks && (
         <Box className='task-body'>
-          {tasks.map((task) => (
-            <Flex key={task.task_id}>
-              <Input value={task.create_time}></Input>
-              <Input value={task.module}></Input>
-              <Input value={task.type_of_task}></Input>
-              <Input value={task.detail}></Input>
-              <Input value={task.priority}></Input>
-              <Flex style={{ width: 200, flex: 'none' }}>
-                {task.assignee.map((person) => (
-                  <Pill key={person} content={person} size='small'></Pill>
-                ))}
-              </Flex>
-              <Input value={task.eta}></Input>
-              <Input value={task.progress}></Input>
-            </Flex>
-          ))}
+          {tasks.map((task) => <TaskRowDisplay key={task._id} task={task} />)}
         </Box>
       )}
 

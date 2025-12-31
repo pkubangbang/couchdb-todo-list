@@ -52,4 +52,5 @@ interface Task {
   eta?: number;
   progress?: number;
   note?: string;
+  conflicts?: Doc<Task>[]
 }

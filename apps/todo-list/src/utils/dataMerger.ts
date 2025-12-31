@@ -11,25 +11,7 @@ export async function fetchConflictingProjectsAndShowMergedResult(
   db: PouchDB.Database,
   projects: Doc<Project>[]
 ) {
-  const ids: string[] = projects.map((proj) => proj._id);
-  const conflicts = (await db.allDocs<Doc<Project>>({
-    include_docs: true,
-    keys: ids,
-    conflicts: true
-  })).rows;
-
-  const promises: Promise<Doc<Project>>[] = [];
-  for (const c of conflicts) {
-    if ('doc' in c && c.doc) {
-      const revs = c.doc._conflicts ?? [];
-      const id = c.doc._id;
-      revs.forEach((rev) => {
-        promises.push(db.get(id, { rev }));
-      });
-    }
-  }
-
-  const docs = await Promise.all(promises);
+  const docs = await getLosingDocs(db, projects);
 
   // update in-place
   const dict = makeDict(projects, (proj) => proj._id);
@@ -46,6 +28,29 @@ export async function fetchConflictingProjectsAndShowMergedResult(
   }
 
   return projects;
+}
+
+export async function fetchConflictingTasksAndShowMergedResult(
+  db: PouchDB.Database,
+  tasks: Doc<Task>[]
+) {
+  // console.log(tasks);
+  const docs = await getLosingDocs(db, tasks);
+
+  // update in-place
+  const dict = makeDict(tasks, task => task._id);
+  for (const d of docs) {
+    const found = dict[d._id];
+    if (found) {
+      if (!Array.isArray(found.conflicts)) {
+        found.conflicts = [];
+      }
+
+      found.conflicts.push(d);
+    }
+  }
+
+  return tasks;
 }
 
 /**
@@ -68,6 +73,29 @@ export function makeDict<T>(
   }
 
   return result;
+}
+
+async function getLosingDocs<T extends object>(db: PouchDB.Database, docs: Doc<T>[]) {
+  const ids: string[] = docs.map((d) => d._id);
+  const conflicts = (await db.allDocs<Doc<T>>({
+    include_docs: true,
+    keys: ids,
+    conflicts: true
+  })).rows;
+
+  const promises: Promise<Doc<T>>[] = [];
+  for (const c of conflicts) {
+    if ('doc' in c && c.doc) {
+      const revs = c.doc._conflicts ?? [];
+      const id = c.doc._id;
+      revs.forEach((rev) => {
+        promises.push(db.get(id, { rev }));
+      });
+    }
+  }
+
+  const batch = await Promise.all(promises);
+  return batch;
 }
 
 function mergeStringList(original: string[], incoming: string[]) {

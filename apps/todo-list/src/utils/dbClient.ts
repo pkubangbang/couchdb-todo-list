@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-window
+import { isDebugEnabled } from '@fluentui/react-northstar';
 import {
   updateRemoteConnectionStatus,
   updateReplicationStatus
@@ -28,6 +29,7 @@ declare global {
       part1: Record<string, unknown>,
       part2: Record<string, unknown>
     ) => void;
+    $removeConflict: (id: string) => void;
   }
 }
 
@@ -90,6 +92,29 @@ class DbClient {
             }
           );
         });
+      };
+
+      /**
+       * Forcibly remove all losing conflict for a particular doc specified by id.
+       * @param id the id of the doc inside local database.
+       */
+      window.$removeConflict = async (id) => {
+        const doc = await this.workingDb.get(id, {
+          conflicts: true
+        });
+
+        if (Array.isArray(doc._conflicts) && doc._conflicts.length) {
+          console.log(
+            `found ${doc._conflicts.length} conflicts with id = ${id}`
+          );
+          let count = 0;
+          for (const rev of doc._conflicts) {
+            await this.workingDb.remove(id, rev);
+            ++count;
+          }
+
+          console.log(`Done. removed ${count} conflicts for id = ${id}.`);
+        }
       };
     }
   }
