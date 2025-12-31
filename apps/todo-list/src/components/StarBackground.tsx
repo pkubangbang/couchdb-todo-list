@@ -6,13 +6,16 @@ interface StarBackgroundProps {
 
 export const StarBackground: React.FC<StarBackgroundProps> = ({ children }) => {
   return (
-    <div style={{
-      position: 'relative',
-      width: '100vw',
-      height: '100vh',
-      background: 'linear-gradient(45deg, #0a0a0a, #1a1a2a, #0a0a0a, #1a1a2a)',
-      overflow: 'hidden',
-    }}>
+    <div
+      style={{
+        position: 'relative',
+        width: '100vw',
+        height: '100vh',
+        background:
+          'linear-gradient(45deg, #0a0a0a, #1a1a2a, #0a0a0a, #1a1a2a)',
+        overflow: 'hidden'
+      }}
+    >
       {/* Punk-style stars with random blinking */}
       {Array.from({ length: 200 }).map((_, i) => {
         const size = Math.random() * 4 + 1;
@@ -41,18 +44,20 @@ export const StarBackground: React.FC<StarBackgroundProps> = ({ children }) => {
       })}
 
       {/* Content container */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '20px',
-        boxSizing: 'border-box'
-      }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '20px',
+          boxSizing: 'border-box'
+        }}
+      >
         {children}
       </div>
     </div>

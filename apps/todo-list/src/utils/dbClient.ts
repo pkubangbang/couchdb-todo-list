@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-window
 import {
   updateRemoteConnectionStatus,
-  updateReplicationStatus,
-} from "./useDbConnectionStore.ts";
+  updateReplicationStatus
+} from './useDbConnectionStore.ts';
 
 /** Information used for resuming the connection */
 interface DbConnection {
@@ -26,7 +26,7 @@ declare global {
     $createConflict: (
       id: string,
       part1: Record<string, unknown>,
-      part2: Record<string, unknown>,
+      part2: Record<string, unknown>
     ) => void;
   }
 }
@@ -62,31 +62,33 @@ class DbClient {
       };
       /**
        * Reliably create conflict documents for a particular doc specified by id.
-       * 
+       *
        * The mechanism is create a temporary db and sync once with the target db,
        * then do different updates on both sides, then sync again.
-       * 
+       *
        * Used mainly for testing the conflict resolving process.
-       * 
+       *
        * @param id the id of the doc inside local database.
        * @param part1 changes made to the target database
        * @param part2 changes made to the temporary database, effectively create conflicts.
        */
       window.$createConflict = async (id, part1, part2) => {
         const v1 = await this.workingDb.get(id);
-        const tempDb = new PouchDB("dev-temp");
-        tempDb.sync(this.workingDb).on("complete", () => {
+        const tempDb = new PouchDB('dev-temp');
+        tempDb.sync(this.workingDb).on('complete', () => {
           console.log('sync1 complete');
           const v1a = Object.assign({}, v1, part1);
           const v1b = Object.assign({}, v1, part2);
 
-          Promise.all([this.workingDb.put(v1a), tempDb.put(v1b)]).then((result) => {
-            console.log(result);
-            tempDb.sync(this.workingDb).on("complete", () => {
-              console.log('sync2 complete. Ready to destroy tempDb');
-              tempDb.destroy();
-            });
-          })
+          Promise.all([this.workingDb.put(v1a), tempDb.put(v1b)]).then(
+            (result) => {
+              console.log(result);
+              tempDb.sync(this.workingDb).on('complete', () => {
+                console.log('sync2 complete. Ready to destroy tempDb');
+                tempDb.destroy();
+              });
+            }
+          );
         });
       };
     }
@@ -112,17 +114,17 @@ class DbClient {
       const remoteDb = new PouchDB(url, {
         auth: {
           username,
-          password,
-        },
+          password
+        }
       });
 
       const meta = await remoteDb.get<DbMeta>(
-        import.meta.env.VITE_REMOTE_DB_META_KEY,
+        import.meta.env.VITE_REMOTE_DB_META_KEY
       );
 
       const { name, version } = meta;
       if (!name || !version) {
-        throw new Error("Invalid remote meta document");
+        throw new Error('Invalid remote meta document');
       }
 
       this.saveCredential(url, name, username, password);
@@ -133,30 +135,30 @@ class DbClient {
       this.online = true;
 
       updateRemoteConnectionStatus(true);
-      updateReplicationStatus("not-started");
+      updateReplicationStatus('not-started');
 
       // start replication
       this.replication = this.workingDb
         .sync(this.remoteDb, {
           live: true,
-          retry: true,
+          retry: true
         })
-        .on("paused", () => updateReplicationStatus("paused"))
-        .on("active", () => updateReplicationStatus("active"))
-        .on("denied", () => updateReplicationStatus("denied"))
-        .on("complete", () => updateReplicationStatus("complete"))
-        .on("error", (err) => {
-          console.error("Replication error:", err);
-          updateReplicationStatus("error");
+        .on('paused', () => updateReplicationStatus('paused'))
+        .on('active', () => updateReplicationStatus('active'))
+        .on('denied', () => updateReplicationStatus('denied'))
+        .on('complete', () => updateReplicationStatus('complete'))
+        .on('error', (err) => {
+          console.error('Replication error:', err);
+          updateReplicationStatus('error');
         });
     } catch (err) {
-      console.error("DB connect failed:", err);
+      console.error('DB connect failed:', err);
 
       this.remoteDb = null;
       this.online = false;
 
       updateRemoteConnectionStatus(false);
-      updateReplicationStatus("error");
+      updateReplicationStatus('error');
 
       throw err;
     }
@@ -175,7 +177,7 @@ class DbClient {
     this.workingDb = this.defaultDb;
     this.online = false;
     updateRemoteConnectionStatus(false);
-    updateReplicationStatus("not-started");
+    updateReplicationStatus('not-started');
   }
 
   /** restore db (after refresh) */
@@ -188,7 +190,7 @@ class DbClient {
     if (!credential) {
       // assuming using local database
       if (requireOnline) {
-        throw new Error("No credential found but require online. Login needed");
+        throw new Error('No credential found but require online. Login needed');
       }
 
       return;
@@ -198,26 +200,26 @@ class DbClient {
     try {
       await this.connect(url, username, password);
     } catch (err) {
-      console.warn("Session expired or invalid, manual login required", err);
+      console.warn('Session expired or invalid, manual login required', err);
       this.removeCredential();
-      throw new Error("need login");
+      throw new Error('need login');
     }
   }
 
   /**
    * get the username & password from localstorage.
-   * 
+   *
    * NOTE: we deliberately store the password because this is the only way
-   * of reliably connecting to the couchdb server over HTTP/HTTPS. 
-   * 
+   * of reliably connecting to the couchdb server over HTTP/HTTPS.
+   *
    * The localstorage is used instead of the default db because
    * it's synchronous, thus simplify the code.
-   * 
-   * @returns 
+   *
+   * @returns
    */
   getCredential() {
     const credentialAsJson = localStorage.getItem(
-      import.meta.env.VITE_CREDENTIAL_KEY,
+      import.meta.env.VITE_CREDENTIAL_KEY
     );
     if (credentialAsJson) {
       return JSON.parse(credentialAsJson);
@@ -228,9 +230,9 @@ class DbClient {
 
   private saveCredential(
     url: string,
-    label = "unlabeled server",
+    label = 'unlabeled server',
     username: string,
-    password: string,
+    password: string
   ) {
     localStorage.setItem(
       import.meta.env.VITE_CREDENTIAL_KEY,
@@ -238,8 +240,8 @@ class DbClient {
         url,
         label,
         username,
-        password,
-      }),
+        password
+      })
     );
   }
 
@@ -251,20 +253,20 @@ class DbClient {
   private prepareDb(db: PouchDB.Database) {
     db.createIndex({
       index: {
-        fields: ["type"],
-      },
+        fields: ['type']
+      }
     });
 
     db.createIndex({
       index: {
-        fields: ["type", "sprint_id"],
-      },
+        fields: ['type', 'sprint_id']
+      }
     });
 
     db.createIndex({
       index: {
-        fields: ["type", "code"],
-      },
+        fields: ['type', 'code']
+      }
     });
 
     return db;

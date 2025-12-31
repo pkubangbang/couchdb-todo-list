@@ -20,5 +20,15 @@
         "react-dom": "npm:react-dom@^17.0.0",
         "@types/react": "npm:@types/react@^17.0.0",
         "@types/react-dom": "npm:@types/react-dom@^17.0.0"
+    },
+    "fmt": {
+        "indentWidth": 2,
+        "semiColons": true,
+        "singleQuote": true,
+        "lineWidth": 80,
+        "useTabs": false,
+        "useBraces": "always",
+        "newLineKind": "lf",
+        "trailingCommas": "never"
     }
 }

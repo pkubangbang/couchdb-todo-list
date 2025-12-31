@@ -4,52 +4,52 @@
 // deno-lint-ignore no-var
 declare var PouchDB: PouchDB.Static;
 
-type Role = 
-| 'admin' 
-| 'dev'
-| 'qa'
-| 'stakeholder'
-| 'po'
+type Role =
+  | 'admin'
+  | 'dev'
+  | 'qa'
+  | 'stakeholder'
+  | 'po';
 
 type DateTimeLike = string & {
-    _comment: 'please parse using dayjs()'
-}
+  _comment: 'please parse using dayjs()';
+};
 
 interface DocMeta {
-    _id: string,
-    _rev: string,
-    _conflicts: string[]
+  _id: string;
+  _rev: string;
+  _conflicts: string[];
 }
 
 type Doc<T extends object> = DocMeta & T;
 
 interface Project {
-    type: 'project',
-    name: string,
-    code: string,
-    desc?: string,
-    participants: Record<string, Role[]>,
-    sprint_ids: string[],
-    hasConflict?: boolean
+  type: 'project';
+  name: string;
+  code: string;
+  desc?: string;
+  participants: Record<string, Role[]>;
+  sprint_ids: string[];
+  hasConflict?: boolean;
 }
 
 interface Sprint {
-    type: 'sprint',
-    name: string,
-    due_time: DateTimeLike
+  type: 'sprint';
+  name: string;
+  due_time: DateTimeLike;
 }
 
 interface Task {
-    type: 'task',
-    task_id: string,
-    sprint_id: string,
-    create_time?: DateTimeLike,
-    module?: string,
-    type_of_task?: string,
-    detail?: string,
-    priority?: number,
-    assignee: string[],
-    eta?: number,
-    progress?: number,
-    note?: string
+  type: 'task';
+  task_id: string;
+  sprint_id: string;
+  create_time?: DateTimeLike;
+  module?: string;
+  type_of_task?: string;
+  detail?: string;
+  priority?: number;
+  assignee: string[];
+  eta?: number;
+  progress?: number;
+  note?: string;
 }
