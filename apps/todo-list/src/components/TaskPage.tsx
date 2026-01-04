@@ -30,6 +30,7 @@ const taskPageStyle = css`
 
   .task-body {
     height: 400px;
+    padding: 3px 0;
     flex: auto;
     overflow: auto;
   }

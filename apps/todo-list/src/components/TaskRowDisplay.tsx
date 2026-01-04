@@ -15,8 +15,7 @@ const Row: FC<TaskRowDisplayProps> = ({ task, hover, select, onHoverChange, onSe
     const isThisRowHovered = hover.id === task._id && hover.rev === task._rev;
     const isThisRowSelected = select.id === task._id && select.rev === task._rev;
 
-    return <Flex vAlign='center' gap="gap.small">
-        <Text content={task._id} size="small" style={{ flex: 'none', marginRight: 8 }} />
+    return <Flex vAlign='stretch' gap="gap.small">
         <TextCell widthInPx={100} value={task.create_time}
             hovered={isThisRowHovered && hover.field === 'create_time'}
             selected={isThisRowSelected && select.field === 'create_time'}
@@ -24,9 +23,27 @@ const Row: FC<TaskRowDisplayProps> = ({ task, hover, select, onHoverChange, onSe
             onClick={() => onSelectChange({ id: task._id, rev: task._rev, field: 'create_time' })}
         ></TextCell>
 
-        <Input value={task.module}></Input>
-        <Input value={task.type_of_task}></Input>
-        <Input value={task.detail}></Input>
+        <TextCell widthInPx={100} value={task.module}
+            hovered={isThisRowHovered && hover.field === 'module'}
+            selected={isThisRowSelected && select.field === 'module'}
+            onHover={() => onHoverChange({ id: task._id, rev: task._rev, field: 'module' })}
+            onClick={() => onSelectChange({ id: task._id, rev: task._rev, field: 'module' })}
+        ></TextCell>
+
+        <TextCell widthInPx={100} value={task.type_of_task}
+            hovered={isThisRowHovered && hover.field === 'type_of_task'}
+            selected={isThisRowSelected && select.field === 'type_of_task'}
+            onHover={() => onHoverChange({ id: task._id, rev: task._rev, field: 'type_of_task' })}
+            onClick={() => onSelectChange({ id: task._id, rev: task._rev, field: 'type_of_task' })}
+        ></TextCell>
+
+        <TextCell widthInPx={300} value={task.detail}
+            hovered={isThisRowHovered && hover.field === 'detail'}
+            selected={isThisRowSelected && select.field === 'detail'}
+            onHover={() => onHoverChange({ id: task._id, rev: task._rev, field: 'detail' })}
+            onClick={() => onSelectChange({ id: task._id, rev: task._rev, field: 'detail' })}
+        ></TextCell>
+
         <Input value={task.priority}></Input>
         <Flex style={{ width: 200, flex: 'none' }}>
             {task.assignee.map((person) => (

@@ -8,13 +8,13 @@ export interface BaseCellProps<T> {
   onHover?: () => void;
   onClick?: () => void;
   onEdit?: () => void;
-  onCommit?: (value: T) => Promise<void>;
+  onCommit?: (value: T | undefined) => Promise<void>;
   onCancel?: () => void;
 }
 
 export type EditingState<T> = { mode: 'read' } | {
   mode: 'edit';
-  draft: T;
+  draft: T | undefined;
 };
 
 export const commonStyle = css`
