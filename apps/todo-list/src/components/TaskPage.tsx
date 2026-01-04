@@ -13,6 +13,7 @@ import { fetchConflictingProjectsAndShowMergedResult, fetchConflictingTasksAndSh
 import { useDbChangeListener } from '../utils/useDbChangeListener.ts';
 import { dbContext } from './DbProvider.tsx';
 import { TaskRowDisplay } from './TaskRowDisplay.tsx';
+import { Coordinate } from './editableCell/common.ts';
 
 export interface TaskPageProps {
   params: {
@@ -105,6 +106,20 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
     navigate('~/projects');
   };
 
+  // show hover indicator
+  const [hover, setHover] = useState<Coordinate>({
+    id: '',
+    rev: '',
+    field: ''
+  });
+
+  // show select indicator
+  const [select, setSelect] = useState<Coordinate>({
+    id: '',
+    rev: '',
+    field: ''
+  });
+
   const [selectedSprintId, setSelectedSprintId] = useState('');
 
   const [taskStatus, tasks] = useAutoTrigger(() => {
@@ -143,6 +158,18 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
     );
   }
 
+  const paddedTasks: Doc<Task>[] = [...(tasks ?? []), ...new Array(10).fill(1).map((_, index) => {
+    return {
+      _id: `$new-${index}`,
+      _rev: '',
+      _conflicts: [],
+      type: 'task' as const,
+      task_id: '',
+      assignee: [],
+      sprint_id: selectedSprintId
+    };
+  })];
+
   return (
     <Flex className={taskPageStyle} column>
       <Flex gap='gap.medium' vAlign='center'>
@@ -151,11 +178,9 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
       </Flex>
       <p>{`The current page is: ${location}`}</p>
 
-      {tasks && (
-        <Box className='task-body'>
-          {tasks.map((task) => <TaskRowDisplay key={task._id} task={task} />)}
-        </Box>
-      )}
+      <Box className='task-body'>
+        {paddedTasks.map((task) => <TaskRowDisplay key={task._id} task={task} hover={hover} select={select} onHoverChange={setHover} onSelectChange={setSelect} />)}
+      </Box>
 
       {sprints && (
         <Flex className='status-line'>
