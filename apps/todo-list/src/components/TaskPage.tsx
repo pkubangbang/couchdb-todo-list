@@ -7,19 +7,22 @@ import {
   Flex
 } from '@fluentui/react-northstar';
 import { useAutoTrigger } from '@scope/utils';
-import { FC, useContext, useEffect, useState } from 'react';
+import { FC, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import { fetchConflictingProjectsAndShowMergedResult, fetchConflictingTasksAndShowMergedResult } from '../utils/dataMerger.ts';
 import { useDbChangeListener } from '../utils/useDbChangeListener.ts';
 import { dbContext } from './DbProvider.tsx';
 import { TaskRowDisplay } from './TaskRowDisplay.tsx';
 import { Coordinate } from './editableCell/common.ts';
+import { usePersistentKv } from '@scope/utils';
 
 export interface TaskPageProps {
   params: {
     project: string;
   };
 }
+
+type SortedTask = Doc<Task> & { order: number }
 
 const taskPageStyle = css`
   position: relative;
@@ -123,6 +126,12 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
 
   const [selectedSprintId, setSelectedSprintId] = useState('');
 
+  const personalStyle = usePersistentKv(selectedSprintId, {
+    widthInPx: {}, // width of columns
+    taskSorts: {}, // order number of task, smaller first
+    uuidToUse: []  // uuids as padding
+  });
+
   const [taskStatus, tasks] = useAutoTrigger(() => {
     if (!selectedSprintId) {
       return Promise.reject('no selected sprint');
@@ -150,34 +159,44 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
     }
   }, [selectedProject, selectedSprintId]);
 
-  if (!selectedProject) {
-    return (
-      <>
-        <h1>Project {code} not found!</h1>
-        <Button content='Back home' primary onClick={goHome}></Button>
-      </>
-    );
-  }
+  
 
-  const paddedTasks: Doc<Task>[] = [...(tasks ?? []), ...new Array(10).fill(1).map((_, index) => {
-    return {
-      _id: `$new-${index}`,
-      _rev: '',
-      _conflicts: [],
-      type: 'task' as const,
-      task_id: '',
-      assignee: [],
-      sprint_id: selectedSprintId
-    };
-  })];
+  const paddedTasks = useMemo(() => {
+    const paddedTasks: SortedTask[] = [];
+    const taskSorts = personalStyle.get('taskSorts') as Record<string, number>;
+    for (const t of tasks ?? []) {
+      paddedTasks.push({
+        ...t,
+        order: taskSorts[t._id] ?? Infinity
+      });
+    }
 
-  return (
+    const uuidToUse = personalStyle.get('uuidToUse') as string[];
+    for (const uuid of uuidToUse) {
+      paddedTasks.push({
+        _id: uuid,
+        _rev: '',
+        _conflicts: [],
+        type: 'task',
+        task_id: '',
+        sprint_id: '',
+        assignee: [],
+        order: taskSorts[uuid] ?? Infinity
+      });
+    }
+
+    return paddedTasks.filter(t => t.order >= 0).sort((a, b) => {
+      return a.order - b.order;
+    });
+  }, [personalStyle, tasks]);
+
+  return selectedProject ? (
     <Flex className={taskPageStyle} column>
       <Flex gap='gap.medium' vAlign='center'>
         <Button primary onClick={goHome} icon={<ChevronStartIcon />} iconOnly />
         <h2>Good. Task page of {code}.</h2>
       </Flex>
-      <p>{`The current page is: ${location}`}</p>
+      {/* <p>{`The current page is: ${location}`}</p> */}
 
       <Box className='task-body'>
         {paddedTasks.map((task) => <TaskRowDisplay key={task._id} task={task} hover={hover} select={select} onHoverChange={setHover} onSelectChange={setSelect} />)}
@@ -198,5 +217,10 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
         </Flex>
       )}
     </Flex>
-  );
+  ) : (
+    <>
+      <h1>Project {code} not found!</h1>
+      <Button content='Back home' primary onClick={goHome}></Button>
+    </>
+  )
 };
