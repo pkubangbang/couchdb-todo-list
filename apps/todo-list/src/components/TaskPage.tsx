@@ -7,7 +7,14 @@ import {
   Flex
 } from '@fluentui/react-northstar';
 import { useAutoTrigger } from '@scope/utils';
-import { FC, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  FC,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 import { useLocation } from 'wouter';
 import {
   fetchConflictingProjectsAndShowMergedResult,
@@ -141,6 +148,26 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
     field: ''
   });
 
+  const handleFieldUpdate = useCallback(
+    async (task: Doc<Task>, field: keyof Task, value: string | undefined) => {
+      // Skip update if value is identical
+      if (task[field] === value) {
+        return;
+      }
+
+      // Create updated task with the new field value
+      const updatedTask: Doc<Task> = {
+        ...task,
+        [field]: value
+        // _id and _rev are preserved from the spread
+      };
+
+      // Save to database (this generates a new revision)
+      await db.put(updatedTask);
+    },
+    [db]
+  );
+
   const [selectedSprintId, setSelectedSprintId] = useState('');
 
   const personalStyle = usePersistentKv(selectedSprintId, {
@@ -228,6 +255,7 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
               select={select}
               onHoverChange={setHover}
               onSelectChange={setSelect}
+              onFieldUpdate={handleFieldUpdate}
             />
           ))}
         </Box>

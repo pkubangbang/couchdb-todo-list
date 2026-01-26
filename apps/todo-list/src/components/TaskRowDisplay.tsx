@@ -16,10 +16,24 @@ export interface TaskRowDisplayProps {
   select: Coordinate;
   onHoverChange: (coord: Coordinate) => void;
   onSelectChange: (coord: Coordinate) => void;
+  onFieldUpdate: (
+    task: Doc<Task>,
+    field: keyof Task,
+    value: string | undefined
+  ) => Promise<void>;
+  onCancel?: () => void;
 }
 
 const Row: FC<TaskRowDisplayProps> = (
-  { task, hover, select, onHoverChange, onSelectChange }
+  {
+    task,
+    hover,
+    select,
+    onHoverChange,
+    onSelectChange,
+    onFieldUpdate,
+    onCancel
+  }
 ) => {
   const isThisRowHovered = hover.id === task._id && hover.rev === task._rev;
   const isThisRowSelected = select.id === task._id && select.rev === task._rev;
@@ -39,6 +53,9 @@ const Row: FC<TaskRowDisplayProps> = (
             rev: task._rev,
             field: 'create_time'
           })}
+        onCommit={async (value) =>
+          await onFieldUpdate(task, 'create_time', value)}
+        onCancel={onCancel}
       >
       </TextCell>
 
@@ -51,6 +68,8 @@ const Row: FC<TaskRowDisplayProps> = (
           onHoverChange({ id: task._id, rev: task._rev, field: 'module' })}
         onClick={() =>
           onSelectChange({ id: task._id, rev: task._rev, field: 'module' })}
+        onCommit={async (value) => await onFieldUpdate(task, 'module', value)}
+        onCancel={onCancel}
       >
       </TextCell>
 
@@ -71,6 +90,9 @@ const Row: FC<TaskRowDisplayProps> = (
             rev: task._rev,
             field: 'type_of_task'
           })}
+        onCommit={async (value) =>
+          await onFieldUpdate(task, 'type_of_task', value)}
+        onCancel={onCancel}
       >
       </TextCell>
 
@@ -83,6 +105,8 @@ const Row: FC<TaskRowDisplayProps> = (
           onHoverChange({ id: task._id, rev: task._rev, field: 'detail' })}
         onClick={() =>
           onSelectChange({ id: task._id, rev: task._rev, field: 'detail' })}
+        onCommit={async (value) => await onFieldUpdate(task, 'detail', value)}
+        onCancel={onCancel}
       >
       </TextCell>
 
@@ -99,7 +123,15 @@ const Row: FC<TaskRowDisplayProps> = (
 };
 
 export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
-  { task, hover, select, onSelectChange, onHoverChange }
+  {
+    task,
+    hover,
+    select,
+    onSelectChange,
+    onHoverChange,
+    onFieldUpdate,
+    onCancel
+  }
 ) => {
   if (task.conflicts && task.conflicts.length) {
     /* super row */
@@ -117,6 +149,8 @@ export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
             select={select}
             onSelectChange={onSelectChange}
             onHoverChange={onHoverChange}
+            onFieldUpdate={onFieldUpdate}
+            onCancel={onCancel}
           />
           {task.conflicts.map((c) => (
             <Row
@@ -126,6 +160,8 @@ export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
               select={select}
               onSelectChange={onSelectChange}
               onHoverChange={onHoverChange}
+              onFieldUpdate={onFieldUpdate}
+              onCancel={onCancel}
             />
           ))}
         </Flex>
@@ -141,6 +177,8 @@ export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
         select={select}
         onSelectChange={onSelectChange}
         onHoverChange={onHoverChange}
+        onFieldUpdate={onFieldUpdate}
+        onCancel={onCancel}
       />
     </Flex>
   );

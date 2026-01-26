@@ -8,6 +8,7 @@ export const TextCell: FC<BaseCellProps<string>> = ({
   onClick,
   onEdit,
   onCommit,
+  onCancel,
   value,
   widthInPx
 }) => {
@@ -36,6 +37,10 @@ export const TextCell: FC<BaseCellProps<string>> = ({
       // turn into editable
       setState({ mode: 'edit', draft: value });
       onEdit?.();
+    } else if (e.key === 'Escape' && isEditing) {
+      // cancel editing and revert to read mode
+      setState({ mode: 'read' });
+      onCancel?.();
     }
   };
 
@@ -45,6 +50,10 @@ export const TextCell: FC<BaseCellProps<string>> = ({
         // re-focus on the div so that user can hit 'enter' again.
         inputRef.current?.focus();
       });
+    } else if (e.key === 'Escape') {
+      // cancel editing and revert to original value
+      setState({ mode: 'read' });
+      onCancel?.();
     }
   };
 
