@@ -9,7 +9,10 @@ import {
 import { useAutoTrigger } from '@scope/utils';
 import { FC, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
-import { fetchConflictingProjectsAndShowMergedResult, fetchConflictingTasksAndShowMergedResult } from '../utils/dataMerger.ts';
+import {
+  fetchConflictingProjectsAndShowMergedResult,
+  fetchConflictingTasksAndShowMergedResult
+} from '../utils/dataMerger.ts';
 import { dbContext } from './DbProvider.tsx';
 import { TaskRowDisplay } from './TaskRowDisplay.tsx';
 import { Coordinate } from './editableCell/common.ts';
@@ -22,7 +25,7 @@ export interface TaskPageProps {
   };
 }
 
-type SortedTask = Doc<Task> & { order: number }
+type SortedTask = Doc<Task> & { order: number };
 
 const taskPageStyle = css`
   position: relative;
@@ -143,7 +146,7 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
   const personalStyle = usePersistentKv(selectedSprintId, {
     widthInPx: {}, // width of columns
     taskSorts: {}, // order number of task, smaller first
-    uuidToUse: []  // uuids as padding
+    uuidToUse: [] // uuids as padding
   });
 
   const [taskStatus, tasks] = useAutoTrigger(() => {
@@ -173,8 +176,6 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
     }
   }, [selectedProject, selectedSprintId]);
 
-  
-
   const paddedTasks = useMemo(() => {
     const paddedTasks: SortedTask[] = [];
     const taskSorts = personalStyle.get('taskSorts') as Record<string, number>;
@@ -199,42 +200,58 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
       });
     }
 
-    return paddedTasks.filter(t => t.order >= 0).sort((a, b) => {
+    return paddedTasks.filter((t) => t.order >= 0).sort((a, b) => {
       return a.order - b.order;
     });
   }, [personalStyle, tasks]);
 
-  return selectedProject ? (
-    <Flex className={taskPageStyle} column>
-      <Flex gap='gap.medium' vAlign='center'>
-        <Button primary onClick={goHome} icon={<ChevronStartIcon />} iconOnly />
-        <h2>Good. Task page of {code}.</h2>
-      </Flex>
-      {/* <p>{`The current page is: ${location}`}</p> */}
+  return selectedProject
+    ? (
+      <Flex className={taskPageStyle} column>
+        <Flex gap='gap.medium' vAlign='center'>
+          <Button
+            primary
+            onClick={goHome}
+            icon={<ChevronStartIcon />}
+            iconOnly
+          />
+          <h2>Good. Task page of {code}.</h2>
+        </Flex>
+        {/* <p>{`The current page is: ${location}`}</p> */}
 
-      <Box className='task-body'>
-        {paddedTasks.map((task) => <TaskRowDisplay key={task._id} task={task} hover={hover} select={select} onHoverChange={setHover} onSelectChange={setSelect} />)}
-      </Box>
-
-      {sprints && (
-        <Flex className='status-line'>
-          {sprints.map((sprint) => (
-            <Button
-              key={sprint._id}
-              content={sprint.name}
-              primary={sprint._id === selectedSprintId}
-              onClick={() => {
-                setSelectedSprintId(sprint._id);
-              }}
+        <Box className='task-body'>
+          {paddedTasks.map((task) => (
+            <TaskRowDisplay
+              key={task._id}
+              task={task}
+              hover={hover}
+              select={select}
+              onHoverChange={setHover}
+              onSelectChange={setSelect}
             />
           ))}
-        </Flex>
-      )}
-    </Flex>
-  ) : (
-    <>
-      <h1>Project {code} not found!</h1>
-      <Button content='Back home' primary onClick={goHome}></Button>
-    </>
-  )
+        </Box>
+
+        {sprints && (
+          <Flex className='status-line'>
+            {sprints.map((sprint) => (
+              <Button
+                key={sprint._id}
+                content={sprint.name}
+                primary={sprint._id === selectedSprintId}
+                onClick={() => {
+                  setSelectedSprintId(sprint._id);
+                }}
+              />
+            ))}
+          </Flex>
+        )}
+      </Flex>
+    )
+    : (
+      <>
+        <h1>Project {code} not found!</h1>
+        <Button content='Back home' primary onClick={goHome}></Button>
+      </>
+    );
 };

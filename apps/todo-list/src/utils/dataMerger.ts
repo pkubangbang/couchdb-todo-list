@@ -38,7 +38,7 @@ export async function fetchConflictingTasksAndShowMergedResult(
   const docs = await getLosingDocs(db, tasks);
 
   // update in-place
-  const dict = makeDict(tasks, task => task._id);
+  const dict = makeDict(tasks, (task) => task._id);
   for (const d of docs) {
     const found = dict[d._id];
     if (found) {
@@ -75,7 +75,10 @@ export function makeDict<T>(
   return result;
 }
 
-async function getLosingDocs<T extends object>(db: PouchDB.Database, docs: Doc<T>[]) {
+async function getLosingDocs<T extends object>(
+  db: PouchDB.Database,
+  docs: Doc<T>[]
+) {
   const ids: string[] = docs.map((d) => d._id);
   const conflicts = (await db.allDocs<Doc<T>>({
     include_docs: true,
