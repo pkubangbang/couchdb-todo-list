@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-window
-import { isDebugEnabled } from '@fluentui/react-northstar';
 import {
   updateRemoteConnectionStatus,
   updateReplicationStatus

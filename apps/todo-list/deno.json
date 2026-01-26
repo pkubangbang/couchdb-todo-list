@@ -9,6 +9,7 @@
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.5",
     "@emotion/css": "npm:@emotion/css@^11.13.5",
     "@fluentui/react-northstar": "npm:@fluentui/react-northstar@^0.71.1",
+    "@react-hook/throttle": "npm:@react-hook/throttle@^2.2.0",
     "@types/pouchdb": "npm:@types/pouchdb@^6.4.2",
     "@types/pouchdb-browser": "npm:@types/pouchdb-browser@^6.1.5",
     "@types/pouchdb-core": "npm:@types/pouchdb-core@^7.0.15",

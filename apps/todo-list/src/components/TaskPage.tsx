@@ -10,11 +10,11 @@ import { useAutoTrigger } from '@scope/utils';
 import { FC, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import { fetchConflictingProjectsAndShowMergedResult, fetchConflictingTasksAndShowMergedResult } from '../utils/dataMerger.ts';
-import { useDbChangeListener } from '../utils/useDbChangeListener.ts';
 import { dbContext } from './DbProvider.tsx';
 import { TaskRowDisplay } from './TaskRowDisplay.tsx';
 import { Coordinate } from './editableCell/common.ts';
 import { usePersistentKv } from '@scope/utils';
+import { useThrottle } from '@react-hook/throttle';
 
 export interface TaskPageProps {
   params: {
@@ -44,26 +44,40 @@ const taskPageStyle = css`
   }
 `;
 
-function projectSelector(doc: object) {
-  return ('type' in doc) && doc.type === 'project';
-}
-
-function sprintSelector(doc: object) {
-  return ('type' in doc) && doc.type === 'sprint';
-}
-
-function taskSelector(doc: object) {
-  return ('type' in doc) && doc.type === 'task';
-}
-
 export const TaskPage: FC<TaskPageProps> = ({ params }) => {
   const code = params.project;
   const [location, navigate] = useLocation();
   const db = useContext(dbContext);
 
-  const projectListener = useDbChangeListener(db, projectSelector);
-  const sprintListener = useDbChangeListener(db, sprintSelector);
-  const taskListener = useDbChangeListener(db, taskSelector);
+  const [projectListener, updateProjectListener] = useThrottle(0, 5);
+  const [sprintListener, updateSprintListener] = useThrottle(0, 5);
+  const [taskListener, updateTaskListener] = useThrottle(0, 5);
+
+  useEffect(() => {
+    const handle = db.changes({
+      live: true,
+      since: 'now',
+      include_docs: true
+    });
+
+    handle.on('change', (change) => {
+      if ('doc' in change && change.doc) {
+        // when include_docs, doc will be inside change.doc
+        const doc = change.doc;
+        if (('type' in doc) && doc.type === 'project') {
+          updateProjectListener(projectListener + 1);
+        } else if (('type' in doc) && doc.type === 'sprint') {
+          updateSprintListener(sprintListener + 1);
+        } else if (('type' in doc) && doc.type === 'task') {
+          updateTaskListener(taskListener + 1);
+        }
+      }
+    });
+
+    return () => {
+      handle.cancel();
+    };
+  }, [db]);
 
   const [projectStatus, selectedProject] = useAutoTrigger<Doc<Project>>(() => {
     return (db as PouchDB.Database<Doc<Project>>).find({
