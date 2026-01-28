@@ -1,17 +1,17 @@
 import {
   Button,
   ExclamationTriangleIcon,
-  Flex,
-  Input,
-  Pill,
-  Text
+  Flex
 } from '@fluentui/react-northstar';
 import { FC } from 'react';
 import { Coordinate } from './editableCell/common.ts';
+import { NumberCell } from './editableCell/NumberCell.tsx';
+import { PeopleCell } from './editableCell/PeopleCell.tsx';
 import { TextCell } from './editableCell/TextCell.tsx';
 
 export interface TaskRowDisplayProps {
   task: Doc<Task>;
+  colSetting: ColumnSetting;
   hover: Coordinate;
   select: Coordinate;
   onHoverChange: (coord: Coordinate) => void;
@@ -19,7 +19,7 @@ export interface TaskRowDisplayProps {
   onFieldUpdate: (
     task: Doc<Task>,
     field: keyof Task,
-    value: string | undefined
+    value: string | number | string[] | undefined
   ) => Promise<void>;
   onCancel?: () => void;
 }
@@ -27,6 +27,7 @@ export interface TaskRowDisplayProps {
 const Row: FC<TaskRowDisplayProps> = (
   {
     task,
+    colSetting,
     hover,
     select,
     onHoverChange,
@@ -39,9 +40,9 @@ const Row: FC<TaskRowDisplayProps> = (
   const isThisRowSelected = select.id === task._id && select.rev === task._rev;
 
   return (
-    <Flex vAlign='stretch' gap='gap.small'>
+    <Flex vAlign='stretch'>
       <TextCell
-        widthInPx={100}
+        widthInPx={colSetting.create_time.widthInPx}
         value={task.create_time}
         hovered={isThisRowHovered && hover.field === 'create_time'}
         selected={isThisRowSelected && select.field === 'create_time'}
@@ -60,7 +61,7 @@ const Row: FC<TaskRowDisplayProps> = (
       </TextCell>
 
       <TextCell
-        widthInPx={100}
+        widthInPx={colSetting.module.widthInPx}
         value={task.module}
         hovered={isThisRowHovered && hover.field === 'module'}
         selected={isThisRowSelected && select.field === 'module'}
@@ -74,7 +75,7 @@ const Row: FC<TaskRowDisplayProps> = (
       </TextCell>
 
       <TextCell
-        widthInPx={100}
+        widthInPx={colSetting.type_of_task.widthInPx}
         value={task.type_of_task}
         hovered={isThisRowHovered && hover.field === 'type_of_task'}
         selected={isThisRowSelected && select.field === 'type_of_task'}
@@ -97,7 +98,7 @@ const Row: FC<TaskRowDisplayProps> = (
       </TextCell>
 
       <TextCell
-        widthInPx={300}
+        widthInPx={colSetting.detail.widthInPx}
         value={task.detail}
         hovered={isThisRowHovered && hover.field === 'detail'}
         selected={isThisRowSelected && select.field === 'detail'}
@@ -110,52 +111,60 @@ const Row: FC<TaskRowDisplayProps> = (
       >
       </TextCell>
 
-      <Input
+      <NumberCell
+        widthInPx={colSetting.priority.widthInPx}
         value={task.priority}
-        style={{
-          border: '1px solid #e0e0e0',
-          width: 60,
-          flex: 'none',
-          padding: '4px 6px',
-          boxSizing: 'border-box'
-        }}
+        hovered={isThisRowHovered && hover.field === 'priority'}
+        selected={isThisRowSelected && select.field === 'priority'}
+        onHover={() =>
+          onHoverChange({ id: task._id, rev: task._rev, field: 'priority' })}
+        onClick={() =>
+          onSelectChange({ id: task._id, rev: task._rev, field: 'priority' })}
+        onCommit={async (value) => await onFieldUpdate(task, 'priority', value)}
+        onCancel={onCancel}
       >
-      </Input>
-      <Flex
-        style={{
-          width: 200,
-          flex: 'none',
-          border: '1px solid #e0e0e0',
-          padding: '4px 6px',
-          boxSizing: 'border-box'
-        }}
-      >
-        {task.assignee.map((person) => (
-          <Pill key={person} content={person} size='small'></Pill>
-        ))}
-      </Flex>
-      <Input
+      </NumberCell>
+
+      <PeopleCell
+        widthInPx={colSetting.assignee.widthInPx}
+        value={task.assignee}
+        hovered={isThisRowHovered && hover.field === 'assignee'}
+        selected={isThisRowSelected && select.field === 'assignee'}
+        onHover={() =>
+          onHoverChange({ id: task._id, rev: task._rev, field: 'assignee' })}
+        onClick={() =>
+          onSelectChange({ id: task._id, rev: task._rev, field: 'assignee' })}
+        onCommit={async (value) => await onFieldUpdate(task, 'assignee', value)}
+        onCancel={onCancel}
+      />
+
+      <NumberCell
+        widthInPx={colSetting.eta.widthInPx}
         value={task.eta}
-        style={{
-          border: '1px solid #e0e0e0',
-          width: 80,
-          flex: 'none',
-          padding: '4px 6px',
-          boxSizing: 'border-box'
-        }}
+        hovered={isThisRowHovered && hover.field === 'eta'}
+        selected={isThisRowSelected && select.field === 'eta'}
+        onHover={() =>
+          onHoverChange({ id: task._id, rev: task._rev, field: 'eta' })}
+        onClick={() =>
+          onSelectChange({ id: task._id, rev: task._rev, field: 'eta' })}
+        onCommit={async (value) => await onFieldUpdate(task, 'eta', value)}
+        onCancel={onCancel}
       >
-      </Input>
-      <Input
+      </NumberCell>
+
+      <NumberCell
+        widthInPx={colSetting.progress.widthInPx}
         value={task.progress}
-        style={{
-          border: '1px solid #e0e0e0',
-          width: 80,
-          flex: 'none',
-          padding: '4px 6px',
-          boxSizing: 'border-box'
-        }}
+        hovered={isThisRowHovered && hover.field === 'progress'}
+        selected={isThisRowSelected && select.field === 'progress'}
+        onHover={() =>
+          onHoverChange({ id: task._id, rev: task._rev, field: 'progress' })}
+        onClick={() =>
+          onSelectChange({ id: task._id, rev: task._rev, field: 'progress' })}
+        onCommit={async (value) => await onFieldUpdate(task, 'progress', value)}
+        onCancel={onCancel}
       >
-      </Input>
+      </NumberCell>
     </Flex>
   );
 };
@@ -163,6 +172,7 @@ const Row: FC<TaskRowDisplayProps> = (
 export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
   {
     task,
+    colSetting,
     hover,
     select,
     onSelectChange,
@@ -183,6 +193,7 @@ export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
         <Flex column style={{ outline: '2px solid red' }}>
           <Row
             task={task}
+            colSetting={colSetting}
             hover={hover}
             select={select}
             onSelectChange={onSelectChange}
@@ -194,6 +205,7 @@ export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
             <Row
               key={c._rev}
               task={c}
+              colSetting={colSetting}
               hover={hover}
               select={select}
               onSelectChange={onSelectChange}
@@ -211,6 +223,7 @@ export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
     <Flex style={{ paddingLeft: 36 }}>
       <Row
         task={task}
+        colSetting={colSetting}
         hover={hover}
         select={select}
         onSelectChange={onSelectChange}

@@ -5,7 +5,14 @@ import {
   useAutoTrigger,
   usePersistentGlobalState
 } from '@scope/utils';
-import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  FC,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import {
   fetchConflictingTasksAndShowMergedResult,
@@ -66,7 +73,11 @@ export const TaskTable: FC<TaskTableProps> = ({ selectedSprintId }) => {
   });
 
   const handleFieldUpdate = useCallback(
-    async (task: Doc<Task>, field: keyof Task, value: string | undefined) => {
+    async (
+      task: Doc<Task>,
+      field: keyof Task,
+      value: string | number | string[] | undefined
+    ) => {
       // Skip update if value is identical
       if (task[field] === value) {
         return;
@@ -91,6 +102,25 @@ export const TaskTable: FC<TaskTableProps> = ({ selectedSprintId }) => {
       version: 0,
       migrate: () => Promise.resolve(),
       default: () => []
+    }
+  );
+
+  const [colSetting, setColSetting] = usePersistentGlobalState<ColumnSetting>(
+    selectedSprintId + ':colset',
+    {
+      version: 0,
+      migrate: () => Promise.resolve(),
+      default: () => ({
+        create_time: { widthInPx: 100, sort: 0, filter: '' },
+        module: { widthInPx: 100, sort: 0, filter: '' },
+        type_of_task: { widthInPx: 100, sort: 0, filter: '' },
+        detail: { widthInPx: 300, sort: 0, filter: '' },
+        priority: { widthInPx: 60, sort: 0, filter: '' },
+        assignee: { widthInPx: 200, sort: 0, filter: '' },
+        eta: { widthInPx: 80, sort: 0, filter: '' },
+        progress: { widthInPx: 80, sort: 0, filter: '' },
+        note: { widthInPx: 150, sort: 0, filter: '' }
+      })
     }
   );
 
@@ -166,8 +196,11 @@ export const TaskTable: FC<TaskTableProps> = ({ selectedSprintId }) => {
     console.log('new layout after reconciliation: ', newLayout);
     setLayout(newLayout);
     performance.mark('task list reconciliation ended');
-    performance.measure('task list reconciliation', 'task list reconciliation started', 'task list reconciliation ended')
-    
+    performance.measure(
+      'task list reconciliation',
+      'task list reconciliation started',
+      'task list reconciliation ended'
+    );
   }, [tasks, layout]);
 
   const paddedTasks = useMemo(() => {
@@ -204,22 +237,61 @@ export const TaskTable: FC<TaskTableProps> = ({ selectedSprintId }) => {
 
   return (
     <Box className={taskTableStyle}>
-      <Flex style={{ paddingLeft: 36, marginBottom: 8 }} gap='gap.small'>
-        <Text weight='bold' style={{ width: 100, flex: 'none' }}>
-          Create Time
-        </Text>
-        <Text weight='bold' style={{ width: 100, flex: 'none' }}>Module</Text>
-        <Text weight='bold' style={{ width: 100, flex: 'none' }}>Type</Text>
-        <Text weight='bold' style={{ width: 300, flex: 'none' }}>Detail</Text>
-        <Text weight='bold' style={{ flex: 'none' }}>Priority</Text>
-        <Text weight='bold' style={{ width: 200, flex: 'none' }}>Assignee</Text>
-        <Text weight='bold' style={{ flex: 'none' }}>ETA</Text>
-        <Text weight='bold' style={{ flex: 'none' }}>Progress</Text>
+      <Flex style={{ paddingLeft: 36, marginBottom: 8 }}>
+        <Flex
+          column
+          style={{ width: colSetting.create_time.widthInPx, flex: 'none' }}
+        >
+          <Text weight='bold'>Create Time</Text>
+          <Text size='small' content='(due time see sprint name)' />
+        </Flex>
+        <Flex
+          column
+          style={{ width: colSetting.module.widthInPx, flex: 'none' }}
+        >
+          <Text weight='bold'>Module</Text>
+        </Flex>
+        <Flex
+          column
+          style={{ width: colSetting.type_of_task.widthInPx, flex: 'none' }}
+        >
+          <Text weight='bold'>Type</Text>
+        </Flex>
+        <Flex
+          column
+          style={{ width: colSetting.detail.widthInPx, flex: 'none' }}
+        >
+          <Text weight='bold'>Detail</Text>
+        </Flex>
+        <Flex
+          column
+          style={{ width: colSetting.priority.widthInPx, flex: 'none' }}
+        >
+          <Text weight='bold'>Priority</Text>
+          <Text size='small' content='(0=blocking, 1=should, 2=plan, 3=n/a)' />
+        </Flex>
+        <Flex
+          column
+          style={{ width: colSetting.assignee.widthInPx, flex: 'none' }}
+        >
+          <Text weight='bold'>Assignee</Text>
+        </Flex>
+        <Flex column style={{ width: colSetting.eta.widthInPx, flex: 'none' }}>
+          <Text weight='bold'>ETA</Text>
+          <Text size='small' content='(1=0.5d, 2=1d)' />
+        </Flex>
+        <Flex
+          column
+          style={{ width: colSetting.progress.widthInPx, flex: 'none' }}
+        >
+          <Text weight='bold'>Progress</Text>
+        </Flex>
       </Flex>
       {paddedTasks.map((task) => (
         <TaskRowDisplay
           key={task._id}
           task={task}
+          colSetting={colSetting}
           hover={hover}
           select={select}
           onHoverChange={setHover}

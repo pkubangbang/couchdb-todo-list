@@ -24,6 +24,7 @@ export class PersistentStore<T = any> {
   private ns: string;
   private version: number;
   private internalValue: T;
+  private initialValue: T;
 
   private attached = false;
   private listeners = new Set<() => void>();
@@ -32,6 +33,7 @@ export class PersistentStore<T = any> {
     this.ns = ns;
     this.version = version;
     this.internalValue = initialValue;
+    this.initialValue = initialValue;
 
     this.get = this.get.bind(this);
     this.set = this.set.bind(this);
@@ -112,5 +114,25 @@ export class PersistentStore<T = any> {
       // just notify
       this.emit();
     }
+  }
+
+  /** get current value for devtools */
+  dev_get() {
+    return this.internalValue;
+  }
+
+  /** set value for devtools */
+  dev_set(newValue: T) {
+    this.set(newValue);
+  }
+
+  /** reset to initial value for devtools */
+  dev_reset() {
+    this.set(this.initialValue);
+  }
+
+  /** get default value for devtools */
+  dev_getDefault() {
+    return this.initialValue;
   }
 }

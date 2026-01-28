@@ -1,6 +1,18 @@
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { type IUsePGSOption, PersistentStore } from './PersistentStore.ts';
 
+interface IPersistentStoreDevTools<T> {
+  get(): T;
+  set(value: T): void;
+  reset(): void;
+}
+
+declare global {
+  interface Window {
+    $states: Record<string, IPersistentStoreDevTools<any>>;
+  }
+}
+
 const storeRegistry: Map<string, PersistentStore> = new Map();
 function getPersistentStore<T>(
   ns: string,
@@ -13,8 +25,21 @@ function getPersistentStore<T>(
     const initialValue = options?.default() ?? undefined;
     found = new PersistentStore(ns, version, initialValue);
     storeRegistry.set(ns, found);
-    
+
     found.attach(options?.migrate); // don't wait
+
+    // Add devtools in development mode
+    if (import.meta.env.MODE === 'development') {
+      if (!window.$states) {
+        window.$states = {};
+      }
+
+      window.$states[ns] = {
+        get: () => found.dev_get(),
+        set: (value: any) => found.dev_set(value),
+        reset: () => found.dev_reset()
+      };
+    }
   }
 
   return found;

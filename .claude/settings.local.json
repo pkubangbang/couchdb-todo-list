@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(deno fmt:*)",
-      "Bash(deno task:*)"
+      "Bash(deno task:*)",
+      "mcp__web-search-prime__webSearchPrime"
     ]
   }
 }

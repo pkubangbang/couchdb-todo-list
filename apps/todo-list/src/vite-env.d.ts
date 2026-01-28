@@ -58,3 +58,21 @@ interface Task {
 type TaskLayout =
   | { type: 'task'; id: string; hidden: boolean }
   | { type: 'empty'; hidden: boolean };
+
+interface ColumnStyle {
+  widthInPx: number;
+  sort: -1 | 0 | 1;
+  filter: string;
+}
+
+type ColumnSetting = {
+  create_time: ColumnStyle;
+  module: ColumnStyle;
+  type_of_task: ColumnStyle;
+  detail: ColumnStyle;
+  priority: ColumnStyle;
+  assignee: ColumnStyle;
+  eta: ColumnStyle;
+  progress: ColumnStyle;
+  note: ColumnStyle;
+};

@@ -4,7 +4,8 @@ import {
   Button,
   ButtonProps,
   ChevronStartIcon,
-  Flex
+  Flex,
+  Text
 } from '@fluentui/react-northstar';
 import { useAutoTrigger } from '@scope/utils';
 import { FC, useContext, useEffect, useState } from 'react';
@@ -149,7 +150,9 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
 
         <Box className='task-body'>
           {selectedSprintId && (
-            <TaskTable selectedSprintId={selectedSprintId} />
+            <TaskTable
+              selectedSprintId={selectedSprintId}
+            />
           )}
         </Box>
 
@@ -158,7 +161,14 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
             {sprints.map((sprint) => (
               <Button
                 key={sprint._id}
-                content={sprint.name}
+                content={import.meta.env.MODE === 'development'
+                  ? (
+                    <Flex column styles={{ fontSize: 'smaller' }}>
+                      <Text content={sprint.name} />
+                      <Text content={sprint._id.slice(-8)} disabled />
+                    </Flex>
+                  )
+                  : sprint.name}
                 primary={sprint._id === selectedSprintId}
                 onClick={() => {
                   setSelectedSprintId(sprint._id);
