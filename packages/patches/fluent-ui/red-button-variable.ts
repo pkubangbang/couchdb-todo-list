@@ -1,7 +1,7 @@
-import type { SiteVariablesPrepared } from "@fluentui/react-northstar";
+import type { SiteVariablesPrepared } from '@fluentui/react-northstar';
 
 export const redButtonVariables = (siteVariables: SiteVariablesPrepared) => {
-    // console.log(siteVariables);
+  // console.log(siteVariables);
   const { red, white } = siteVariables.colorScheme;
 
   return {
@@ -31,6 +31,6 @@ export const redButtonVariables = (siteVariables: SiteVariablesPrepared) => {
     /* Disabled */
     colorDisabled: siteVariables.colors.grey[300],
     backgroundColorDisabled: siteVariables.colors.grey[50],
-    borderColorDisabled: siteVariables.colors.grey[150],
+    borderColorDisabled: siteVariables.colors.grey[150]
   };
 };

@@ -1,36 +1,36 @@
 {
-    "workspace": [
-        "apps/*",
-        "packages/*"
+  "workspace": [
+    "apps/*",
+    "packages/*"
+  ],
+  "compilerOptions": {
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
     ],
-    "compilerOptions": {
-        "lib": [
-            "ES2022",
-            "DOM",
-            "DOM.Iterable"
-        ],
-        "jsx": "react-jsx",
-        "jsxImportSource": "react",
-        "jsxImportSourceTypes": "@types/react"
-    },
-    "imports": {
-        "immer": "npm:immer@^10.2.0",
-        "localforage": "npm:localforage@^1.10.0",
-        "uuid": "npm:uuid@^13.0.0",
-        "vite": "npm:vite@^7.2.7",
-        "react": "npm:react@^17.0.0",
-        "react-dom": "npm:react-dom@^17.0.0",
-        "@types/react": "npm:@types/react@^17.0.0",
-        "@types/react-dom": "npm:@types/react-dom@^17.0.0"
-    },
-    "fmt": {
-        "indentWidth": 2,
-        "semiColons": true,
-        "singleQuote": true,
-        "lineWidth": 80,
-        "useTabs": false,
-        "useBraces": "always",
-        "newLineKind": "lf",
-        "trailingCommas": "never"
-    }
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "jsxImportSourceTypes": "@types/react"
+  },
+  "imports": {
+    "immer": "npm:immer@^10.2.0",
+    "localforage": "npm:localforage@^1.10.0",
+    "uuid": "npm:uuid@^13.0.0",
+    "vite": "npm:vite@^7.2.7",
+    "react": "npm:react@^17.0.0",
+    "react-dom": "npm:react-dom@^17.0.0",
+    "@types/react": "npm:@types/react@^17.0.0",
+    "@types/react-dom": "npm:@types/react-dom@^17.0.0"
+  },
+  "fmt": {
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": true,
+    "lineWidth": 80,
+    "useTabs": false,
+    "useBraces": "always",
+    "newLineKind": "lf",
+    "trailingCommas": "never"
+  }
 }

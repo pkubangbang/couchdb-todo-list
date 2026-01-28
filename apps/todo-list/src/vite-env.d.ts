@@ -56,5 +56,5 @@ interface Task {
 }
 
 type TaskLayout =
-| {type: 'task', id: string, hidden: boolean}
-| {type: 'empty', hidden: boolean}
+  | { type: 'task'; id: string; hidden: boolean }
+  | { type: 'empty'; hidden: boolean };

@@ -3,11 +3,11 @@
 */
 
 // deno-lint-ignore-file no-explicit-any no-window
-import React, { useCallback, useMemo, useRef } from "react";
-import { type Draft, enablePatches, produceWithPatches } from "immer";
-import { useSyncExternalStore } from "use-sync-external-store/shim";
+import React, { useCallback, useMemo, useRef } from 'react';
+import { type Draft, enablePatches, produceWithPatches } from 'immer';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
-import { PlTable } from "./plTable.ts";
+import { PlTable } from './plTable.ts';
 
 // immer patches will report the props that changes.
 enablePatches();
@@ -23,7 +23,7 @@ type IUseStore<T> = {
 
   createDispatcher<FN extends (draft: Draft<T>, ...args: any[]) => void>(
     cb: FN,
-    debugName?: string,
+    debugName?: string
   ): VoidFunctionWithoutFirstParam<FN>;
 } & Partial<IUseStoreDebugTools<T>>;
 
@@ -69,7 +69,7 @@ type ComputedFn<T> = (store: T) => any;
  */
 export function createStoreHook<T extends Record<string, any>>(
   initializer: () => T,
-  storeName?: string,
+  storeName?: string
 ) {
   const original = initializer();
 
@@ -88,7 +88,7 @@ export function createStoreHook<T extends Record<string, any>>(
     // only the first level is tracked
     const changedKeys = distinct(patches.map((p) => p.path[0]));
     for (const prop of changedKeys) {
-      if (typeof prop === "string") {
+      if (typeof prop === 'string') {
         table.notifyListeners(prop);
       }
     }
@@ -128,16 +128,16 @@ export function createStoreHook<T extends Record<string, any>>(
       // process all pending requests
       for (const prop of pendingPropsRef.current) {
         table.addListener(prop, checkForUpdates);
-      };
+      }
 
       pendingPropsRef.current.clear();
 
       const random = randomHash(); // e.g. r2ader
       fnRef.current._id = random;
-      console.log("subscribe done", random);
+      console.log('subscribe done', random);
 
       return () => {
-        console.log("unsubscribe", random);
+        console.log('unsubscribe', random);
         fnRef.current = null;
         table.removeListener(checkForUpdates);
         pendingPropsRef.current.clear();
@@ -156,16 +156,16 @@ export function createStoreHook<T extends Record<string, any>>(
           }
 
           const value = getState()[prop as keyof T];
-          if (typeof prop === "symbol") {
+          if (typeof prop === 'symbol') {
             // Do not record symbol access.
             return value;
           }
 
-          if (typeof value === "function") {
+          if (typeof value === 'function') {
             return (value as ComputedFn<T>)(proxy);
           }
 
-          console.log("proxying", fnRef.current?._id);
+          console.log('proxying', fnRef.current?._id);
           if (fnRef.current) {
             // idempotent add dep tracking
             table.addListener(prop, fnRef.current);
@@ -175,7 +175,7 @@ export function createStoreHook<T extends Record<string, any>>(
           }
 
           return value;
-        },
+        }
       });
     }, []); // The proxy is stable!
 
@@ -188,7 +188,7 @@ export function createStoreHook<T extends Record<string, any>>(
    */
 
   let isDispatching = false;
-  let activeDispatcherName = "";
+  let activeDispatcherName = '';
 
   /**
    * Add arbitrary dispatcher to the store. To declare a dispatcher,
@@ -211,9 +211,9 @@ export function createStoreHook<T extends Record<string, any>>(
    * @param debugName a debugName shown in console log if specified. Otherwise a random name will be given.
    * @returns a dispatcher which takes all params from the cb EXCEPT the first one.
    */
-  const createDispatcher: IUseStore<T>["createDispatcher"] = (
+  const createDispatcher: IUseStore<T>['createDispatcher'] = (
     cb,
-    debugName = "unspecified dispatcher " + randomHash(),
+    debugName = 'unspecified dispatcher ' + randomHash()
   ) => {
     return (...args: any[]) => {
       if (!isDispatching) {
@@ -221,7 +221,7 @@ export function createStoreHook<T extends Record<string, any>>(
         activeDispatcherName = debugName;
       } else {
         throw new Error(
-          `Nested dispatching: [${debugName}] inside [${activeDispatcherName}]`,
+          `Nested dispatching: [${debugName}] inside [${activeDispatcherName}]`
         );
       }
 
@@ -233,7 +233,7 @@ export function createStoreHook<T extends Record<string, any>>(
         console.error(e);
       } finally {
         isDispatching = false;
-        activeDispatcherName = "";
+        activeDispatcherName = '';
       }
 
       if (hasFailure) {
@@ -247,12 +247,12 @@ export function createStoreHook<T extends Record<string, any>>(
    * ====================================================
    */
   function dev_saveToSessionStorage(storeName: string | undefined) {
-    if (import.meta.env.MODE === "development") {
+    if (import.meta.env.MODE === 'development') {
       if (storeName) {
         const sessionStorageKey = `store#${storeName}`;
         sessionStorage.setItem(
           sessionStorageKey,
-          JSON.stringify(state),
+          JSON.stringify(state)
         );
       }
     }
@@ -265,19 +265,19 @@ export function createStoreHook<T extends Record<string, any>>(
       try {
         state = JSON.parse(sessionData) as T;
         console.log(
-          `useStoreHook[${storeName}]: successfully restored data from SessionStorage after reload.`,
+          `useStoreHook[${storeName}]: successfully restored data from SessionStorage after reload.`
         );
       } catch {
         console.error(
-          `useStoreHook[${storeName}]: failed to restore data from SessionStorage after reload. Use default instead`,
+          `useStoreHook[${storeName}]: failed to restore data from SessionStorage after reload. Use default instead`
         );
       }
     }
   }
 
   function _set(mockState: Partial<T>) {
-    if (typeof mockState === "undefined") {
-      throw new Error("set() needs a state as input.");
+    if (typeof mockState === 'undefined') {
+      throw new Error('set() needs a state as input.');
     }
 
     setState((draft) => {
@@ -313,13 +313,13 @@ export function createStoreHook<T extends Record<string, any>>(
   }
 
   // Add jest testing fixture
-  if (import.meta.env.MODE === "test") {
+  if (import.meta.env.MODE === 'test') {
     useStoreHook.set = _set;
     useStoreHook.reset = _reset;
   }
 
   // Add console devtools
-  if (import.meta.env.MODE === "development") {
+  if (import.meta.env.MODE === 'development') {
     if (storeName) {
       dev_loadFromSessionStorage(storeName);
       if (!window.$stores) {
@@ -327,7 +327,7 @@ export function createStoreHook<T extends Record<string, any>>(
       }
       window.$stores[storeName] = {
         set: _set,
-        reset: _reset,
+        reset: _reset
       };
 
       window.$store_resetAll = () => {
@@ -336,13 +336,13 @@ export function createStoreHook<T extends Record<string, any>>(
           window.$stores[storeName].reset();
         });
         console.log(
-          "Successfully reset all named stores to their initial states.",
+          'Successfully reset all named stores to their initial states.'
         );
       };
 
       window.$store_version = (React as any).useSyncExternalStore
-        ? "18"
-        : "17compat";
+        ? '18'
+        : '17compat';
     }
   }
 

@@ -1,18 +1,21 @@
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
-import { PersistentStore, type IUsePGSOption } from './PersistentStore.ts';
+import { type IUsePGSOption, PersistentStore } from './PersistentStore.ts';
 
 const storeRegistry: Map<string, PersistentStore> = new Map();
-function getPersistentStore<T>(ns: string, options?: IUsePGSOption<T>): PersistentStore<T> {
-    let found = storeRegistry.get(ns);
-    if (!found) {
-        const version = options?.version ?? 0;
-        const initialValue = options?.default() ?? undefined;
-        found = new PersistentStore(ns, version, initialValue);
-        storeRegistry.set(ns, found);
-    }
+function getPersistentStore<T>(
+  ns: string,
+  options?: IUsePGSOption<T>
+): PersistentStore<T> {
+  let found = storeRegistry.get(ns);
+  if (!found) {
+    const version = options?.version ?? 0;
+    const initialValue = options?.default() ?? undefined;
+    found = new PersistentStore(ns, version, initialValue);
+    storeRegistry.set(ns, found);
+  }
 
-    found.attach(options?.migrate); // don't wait
-    return found;
+  found.attach(options?.migrate); // don't wait
+  return found;
 }
 
 /**

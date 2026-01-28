@@ -110,14 +110,52 @@ const Row: FC<TaskRowDisplayProps> = (
       >
       </TextCell>
 
-      <Input value={task.priority}></Input>
-      <Flex style={{ width: 200, flex: 'none' }}>
+      <Input
+        value={task.priority}
+        style={{
+          border: '1px solid #e0e0e0',
+          width: 60,
+          flex: 'none',
+          padding: '4px 6px',
+          boxSizing: 'border-box'
+        }}
+      >
+      </Input>
+      <Flex
+        style={{
+          width: 200,
+          flex: 'none',
+          border: '1px solid #e0e0e0',
+          padding: '4px 6px',
+          boxSizing: 'border-box'
+        }}
+      >
         {task.assignee.map((person) => (
           <Pill key={person} content={person} size='small'></Pill>
         ))}
       </Flex>
-      <Input value={task.eta}></Input>
-      <Input value={task.progress}></Input>
+      <Input
+        value={task.eta}
+        style={{
+          border: '1px solid #e0e0e0',
+          width: 80,
+          flex: 'none',
+          padding: '4px 6px',
+          boxSizing: 'border-box'
+        }}
+      >
+      </Input>
+      <Input
+        value={task.progress}
+        style={{
+          border: '1px solid #e0e0e0',
+          width: 80,
+          flex: 'none',
+          padding: '4px 6px',
+          boxSizing: 'border-box'
+        }}
+      >
+      </Input>
     </Flex>
   );
 };

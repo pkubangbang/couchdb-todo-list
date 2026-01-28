@@ -90,8 +90,8 @@ export const TextCell: FC<BaseCellProps<string>> = ({
           width: widthInPx,
           flex: 'none',
           boxSizing: 'border-box',
-          border: 'none',
-          padding: 'none'
+          border: '1px solid #e0e0e0',
+          padding: '4px 6px'
         }}
       >
       </input>
