@@ -8,13 +8,15 @@ function getPersistentStore<T>(
 ): PersistentStore<T> {
   let found = storeRegistry.get(ns);
   if (!found) {
+    console.log('creating persistent store: ' + ns);
     const version = options?.version ?? 0;
     const initialValue = options?.default() ?? undefined;
     found = new PersistentStore(ns, version, initialValue);
     storeRegistry.set(ns, found);
+    
+    found.attach(options?.migrate); // don't wait
   }
 
-  found.attach(options?.migrate); // don't wait
   return found;
 }
 

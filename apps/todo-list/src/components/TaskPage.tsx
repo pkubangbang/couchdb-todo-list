@@ -149,7 +149,7 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
 
         <Box className='task-body'>
           {selectedSprintId && (
-            <TaskTable db={db} selectedSprintId={selectedSprintId} />
+            <TaskTable selectedSprintId={selectedSprintId} />
           )}
         </Box>
 

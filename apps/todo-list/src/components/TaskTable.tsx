@@ -5,7 +5,7 @@ import {
   useAutoTrigger,
   usePersistentGlobalState
 } from '@scope/utils';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import {
   fetchConflictingTasksAndShowMergedResult,
@@ -15,20 +15,41 @@ import { TaskRowDisplay } from './TaskRowDisplay.tsx';
 import { Coordinate } from './editableCell/common.ts';
 import { useThrottle } from '@react-hook/throttle';
 import { produce } from 'immer';
+import { dbContext } from './DbProvider.tsx';
 
 const taskTableStyle = css`
-  height: 100%;
-  overflow: auto;
   padding: 3px 0;
 `;
 
 export interface TaskTableProps {
-  db: PouchDB.Database;
   selectedSprintId: string;
 }
 
-export const TaskTable: FC<TaskTableProps> = ({ db, selectedSprintId }) => {
+export const TaskTable: FC<TaskTableProps> = ({ selectedSprintId }) => {
+  const db = useContext(dbContext);
   const [taskListener, updateTaskListener] = useThrottle(0, 5);
+
+  useEffect(() => {
+    const handle = db.changes({
+      live: true,
+      since: 'now',
+      include_docs: true
+    });
+
+    handle.on('change', (change) => {
+      if ('doc' in change && change.doc) {
+        // when include_docs, doc will be inside change.doc
+        const doc = change.doc;
+        if (('type' in doc) && doc.type === 'task') {
+          updateTaskListener(taskListener + 1);
+        }
+      }
+    });
+
+    return () => {
+      handle.cancel();
+    };
+  }, [db, taskListener]);
 
   // show hover indicator
   const [hover, setHover] = useState<Coordinate>({
@@ -64,7 +85,6 @@ export const TaskTable: FC<TaskTableProps> = ({ db, selectedSprintId }) => {
     [db]
   );
 
-  // FIXME: refactor out of this component; otherwise the default sprint id will pollute the db.
   const [layout, setLayout] = usePersistentGlobalState<TaskLayout[]>(
     selectedSprintId,
     {
@@ -87,15 +107,19 @@ export const TaskTable: FC<TaskTableProps> = ({ db, selectedSprintId }) => {
   }, [db, selectedSprintId, taskListener]);
 
   useEffect(() => {
+    console.log('tasks -> ', tasks);
+
     // reconciliate the layout if mismatch
     if (!Array.isArray(tasks) || !tasks.length) { return; }
     const knownIdCache = makeDict(
       layout.filter((item) => item.type === 'task'),
       (t) => t.id
     );
+
     const needReconciliation = tasks.some((t) => !knownIdCache[t._id]);
     if (!needReconciliation) { return; }
 
+    performance.mark('task list reconciliation started');
     const naturalLayout = (tasks ?? []).sort((t1, t2) => {
       // first by priority, then by module, then by type_of_task, then by create_time
       if (t1.priority !== t2.priority) {
@@ -139,7 +163,11 @@ export const TaskTable: FC<TaskTableProps> = ({ db, selectedSprintId }) => {
       }
     });
 
+    console.log('new layout after reconciliation: ', newLayout);
     setLayout(newLayout);
+    performance.mark('task list reconciliation ended');
+    performance.measure('task list reconciliation', 'task list reconciliation started', 'task list reconciliation ended')
+    
   }, [tasks, layout]);
 
   const paddedTasks = useMemo(() => {
