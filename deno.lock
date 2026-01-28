@@ -15,9 +15,11 @@
     "npm:@types/react@17": "17.0.90",
     "npm:@vitejs/plugin-react@^5.1.2": "5.1.2_vite@7.3.0__picomatch@4.0.3_@babel+core@7.28.5",
     "npm:immer@^10.2.0": "10.2.0",
+    "npm:localforage@^1.10.0": "1.10.0",
     "npm:react-dom@17": "17.0.2_react@17.0.2",
     "npm:react@17": "17.0.2",
     "npm:use-sync-external-store@^1.6.0": "1.6.0_react@17.0.2",
+    "npm:uuid@13": "13.0.0",
     "npm:vite@*": "7.3.0_picomatch@4.0.3",
     "npm:vite@^7.2.7": "7.3.0_picomatch@4.0.3",
     "npm:wouter@^3.9.0": "3.9.0_react@17.0.2"
@@ -1290,6 +1292,10 @@
       "integrity": "sha512-WDC/ui2VVRrz3jOVi+XtjqkDjiVjTtFaAGiW37k6b+ohyQ5wYDOGkvCZa8+H0nx3gyvv0+BST9xuOgIyGQ00gw==",
       "tarball": "https://registry.npmmirror.com/hyphenate-style-name/-/hyphenate-style-name-1.1.0.tgz"
     },
+    "immediate@3.0.6": {
+      "integrity": "sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==",
+      "tarball": "https://registry.npmmirror.com/immediate/-/immediate-3.0.6.tgz"
+    },
     "immer@10.2.0": {
       "integrity": "sha512-d/+XTN3zfODyjr89gM3mPq1WNX2B8pYsu7eORitdwyA2sBubnTl3laYlBk4sXY5FUa5qTZGBDPJICVbvqzjlbw==",
       "tarball": "https://registry.npmmirror.com/immer/-/immer-10.2.0.tgz"
@@ -1339,9 +1345,23 @@
       "bin": true,
       "tarball": "https://registry.npmmirror.com/json5/-/json5-2.2.3.tgz"
     },
+    "lie@3.1.1": {
+      "integrity": "sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==",
+      "dependencies": [
+        "immediate"
+      ],
+      "tarball": "https://registry.npmmirror.com/lie/-/lie-3.1.1.tgz"
+    },
     "lines-and-columns@1.2.4": {
       "integrity": "sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==",
       "tarball": "https://registry.npmmirror.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
+    },
+    "localforage@1.10.0": {
+      "integrity": "sha512-14/H1aX7hzBBmmh7sGPd+AOMkkIrHM3Z1PAyGgZigA1H1p5O5ANnMyWzvpAETtG68/dC4pC0ncy3+PPGzXZHPg==",
+      "dependencies": [
+        "lie"
+      ],
+      "tarball": "https://registry.npmmirror.com/localforage/-/localforage-1.10.0.tgz"
     },
     "lodash@4.17.21": {
       "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",
@@ -1607,6 +1627,11 @@
       ],
       "tarball": "https://registry.npmmirror.com/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz"
     },
+    "uuid@13.0.0": {
+      "integrity": "sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==",
+      "bin": true,
+      "tarball": "https://registry.npmmirror.com/uuid/-/uuid-13.0.0.tgz"
+    },
     "vite@7.3.0_picomatch@4.0.3": {
       "integrity": "sha512-dZwN5L1VlUBewiP6H9s2+B3e3Jg96D0vzN+Ry73sOefebhYr9f94wwkMNN/9ouoU8pV1BqA1d1zGk8928cx0rg==",
       "dependencies": [
@@ -1647,8 +1672,10 @@
       "npm:@types/react-dom@17",
       "npm:@types/react@17",
       "npm:immer@^10.2.0",
+      "npm:localforage@^1.10.0",
       "npm:react-dom@17",
       "npm:react@17",
+      "npm:uuid@13",
       "npm:vite@^7.2.7"
     ],
     "members": {

@@ -54,3 +54,7 @@ interface Task {
   note?: string;
   conflicts?: Doc<Task>[];
 }
+
+type TaskLayout =
+| {type: 'task', id: string, hidden: boolean}
+| {type: 'empty', hidden: boolean}
