@@ -11,6 +11,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState
 } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +24,18 @@ import { Coordinate } from './editableCell/common.ts';
 import { useThrottle } from '@react-hook/throttle';
 import { produce } from 'immer';
 import { dbContext } from './DbProvider.tsx';
+
+// Define column order for keyboard navigation
+const COLUMNS: Array<keyof Task> = [
+  'create_time',
+  'module',
+  'type_of_task',
+  'detail',
+  'priority',
+  'assignee',
+  'eta',
+  'progress'
+];
 
 const taskTableStyle = css`
   padding: 3px 0;
@@ -95,6 +108,9 @@ export const TaskTable: FC<TaskTableProps> = ({ selectedSprintId }) => {
     },
     [db]
   );
+
+  // Excel-like keyboard navigation
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [layout, setLayout] = usePersistentGlobalState<TaskLayout[]>(
     selectedSprintId,
@@ -235,8 +251,161 @@ export const TaskTable: FC<TaskTableProps> = ({ selectedSprintId }) => {
     }).filter((row) => !!row);
   }, [layout, tasks, selectedSprintId]);
 
+  // Excel-like keyboard navigation
+  const navigateCell = useCallback((
+    direction: 'up' | 'down' | 'left' | 'right'
+  ) => {
+    if (!paddedTasks.length || !COLUMNS.length) {
+      return;
+    }
+
+    // Build a mapping of visual row index to task
+    // Each task with conflicts becomes multiple visual rows (winning + conflicts)
+    const visualRows: Array<{ task: Doc<Task>; rev: string }> = [];
+    for (const task of paddedTasks) {
+      // Winning revision
+      visualRows.push({ task, rev: task._rev });
+      // Conflict revisions
+      if (task.conflicts && task.conflicts.length) {
+        for (const conflict of task.conflicts) {
+          visualRows.push({ task: conflict, rev: conflict._rev });
+        }
+      }
+    }
+
+    // If no cell selected, select first cell (winning revision of first task)
+    if (!select.id) {
+      const firstRow = visualRows[0];
+      setSelect({
+        id: firstRow.task._id,
+        rev: firstRow.rev,
+        field: COLUMNS[0]
+      });
+      return;
+    }
+
+    // Find current visual row position
+    const currentVisualRowIndex = visualRows.findIndex(
+      (row) => row.task._id === select.id && row.rev === select.rev
+    );
+    if (currentVisualRowIndex === -1) {
+      // Selection not found, select first cell (winning revision of first task)
+      const firstRow = visualRows[0];
+      setSelect({
+        id: firstRow.task._id,
+        rev: firstRow.rev,
+        field: COLUMNS[0]
+      });
+      return;
+    }
+
+    const currentColIndex = COLUMNS.indexOf(select.field as keyof Task);
+    if (currentColIndex === -1) {
+      // Field not in columns, select first column
+      const currentRow = visualRows[currentVisualRowIndex];
+      setSelect({
+        id: currentRow.task._id,
+        rev: currentRow.rev,
+        field: COLUMNS[0]
+      });
+      return;
+    }
+
+    let newVisualRow = currentVisualRowIndex;
+    let newCol = currentColIndex;
+
+    // Calculate new position
+    switch (direction) {
+      case 'up':
+        newVisualRow = Math.max(0, currentVisualRowIndex - 1);
+        break;
+      case 'down':
+        newVisualRow = Math.min(
+          visualRows.length - 1,
+          currentVisualRowIndex + 1
+        );
+        break;
+      case 'left':
+        newCol = currentColIndex - 1;
+        if (newCol < 0) {
+          newCol = COLUMNS.length - 1;
+          newVisualRow = Math.max(0, currentVisualRowIndex - 1);
+        }
+        break;
+      case 'right':
+        newCol = currentColIndex + 1;
+        if (newCol >= COLUMNS.length) {
+          newCol = 0;
+          newVisualRow = Math.min(
+            visualRows.length - 1,
+            currentVisualRowIndex + 1
+          );
+        }
+        break;
+    }
+
+    const targetRow = visualRows[newVisualRow];
+    setSelect({
+      id: targetRow.task._id,
+      rev: targetRow.rev,
+      field: COLUMNS[newCol]
+    });
+  }, [paddedTasks, select]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Don't handle navigation when an input is focused (edit mode)
+    const activeElement = document.activeElement;
+    if (activeElement?.tagName === 'INPUT') {
+      return;
+    }
+
+    // Handle arrow keys for navigation
+    switch (e.key) {
+      case 'ArrowUp':
+        e.preventDefault();
+        navigateCell('up');
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        navigateCell('down');
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        navigateCell('left');
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        navigateCell('right');
+        break;
+      case 'Tab':
+        e.preventDefault();
+        navigateCell(e.shiftKey ? 'left' : 'right');
+        break;
+    }
+  }, [navigateCell]);
+
+  // Auto-focus the selected cell after navigation
+  useEffect(() => {
+    if (select.id && select.rev && select.field) {
+      // Find the cell element by data attributes
+      // Combine id and rev to uniquely identify cells in superrows
+      const cellId = `${select.id}|${select.rev}`;
+      const selector =
+        `[data-cell-id="${cellId}"][data-field="${select.field}"]`;
+      const element = document.querySelector(selector) as HTMLElement;
+      if (element) {
+        element.focus();
+      }
+    }
+  }, [select.id, select.rev, select.field]);
+
   return (
-    <Box className={taskTableStyle}>
+    <Box
+      className={taskTableStyle}
+      ref={containerRef}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <Flex style={{ paddingLeft: 36, marginBottom: 8 }}>
         <Flex
           column

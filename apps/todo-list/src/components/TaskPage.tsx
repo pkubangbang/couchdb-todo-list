@@ -14,6 +14,7 @@ import {
   fetchConflictingProjectsAndShowMergedResult
 } from '../utils/dataMerger.ts';
 import { dbContext } from './DbProvider.tsx';
+import { ProjectProvider } from './ProjectProvider.tsx';
 import { TaskTable } from './TaskTable.tsx';
 import { useThrottle } from '@react-hook/throttle';
 
@@ -150,9 +151,11 @@ export const TaskPage: FC<TaskPageProps> = ({ params }) => {
 
         <Box className='task-body'>
           {selectedSprintId && (
-            <TaskTable
-              selectedSprintId={selectedSprintId}
-            />
+            <ProjectProvider project={selectedProject}>
+              <TaskTable
+                selectedSprintId={selectedSprintId}
+              />
+            </ProjectProvider>
           )}
         </Box>
 

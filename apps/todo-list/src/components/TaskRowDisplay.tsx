@@ -3,11 +3,12 @@ import {
   ExclamationTriangleIcon,
   Flex
 } from '@fluentui/react-northstar';
-import { FC } from 'react';
+import { FC, useContext, useMemo } from 'react';
 import { Coordinate } from './editableCell/common.ts';
 import { NumberCell } from './editableCell/NumberCell.tsx';
-import { PeopleCell } from './editableCell/PeopleCell.tsx';
+import { PeopleCell, Participant } from './editableCell/PeopleCell.tsx';
 import { TextCell } from './editableCell/TextCell.tsx';
+import { projectContext } from './ProjectProvider.tsx';
 
 export interface TaskRowDisplayProps {
   task: Doc<Task>;
@@ -24,6 +25,18 @@ export interface TaskRowDisplayProps {
   onCancel?: () => void;
 }
 
+// Derive participants from project.participants (Record<string, Role[]>)
+// Converts to Participant[] format expected by PeopleCell
+const deriveParticipants = (
+  project: Doc<Project> | null
+): Participant[] => {
+  if (!project?.participants) return [];
+  return Object.entries(project.participants).map(([id, roles]) => ({
+    id,
+    name: id // Use id as name since project.participants only stores roles
+  }));
+};
+
 const Row: FC<TaskRowDisplayProps> = (
   {
     task,
@@ -36,8 +49,10 @@ const Row: FC<TaskRowDisplayProps> = (
     onCancel
   }
 ) => {
+  const project = useContext(projectContext);
   const isThisRowHovered = hover.id === task._id && hover.rev === task._rev;
   const isThisRowSelected = select.id === task._id && select.rev === task._rev;
+  const participants = useMemo(() => deriveParticipants(project), [project]);
 
   return (
     <Flex vAlign='stretch'>
@@ -46,6 +61,9 @@ const Row: FC<TaskRowDisplayProps> = (
         value={task.create_time}
         hovered={isThisRowHovered && hover.field === 'create_time'}
         selected={isThisRowSelected && select.field === 'create_time'}
+        taskId={task._id}
+        taskRev={task._rev}
+        fieldName='create_time'
         onHover={() =>
           onHoverChange({ id: task._id, rev: task._rev, field: 'create_time' })}
         onClick={() =>
@@ -65,6 +83,9 @@ const Row: FC<TaskRowDisplayProps> = (
         value={task.module}
         hovered={isThisRowHovered && hover.field === 'module'}
         selected={isThisRowSelected && select.field === 'module'}
+        taskId={task._id}
+        taskRev={task._rev}
+        fieldName='module'
         onHover={() =>
           onHoverChange({ id: task._id, rev: task._rev, field: 'module' })}
         onClick={() =>
@@ -79,6 +100,9 @@ const Row: FC<TaskRowDisplayProps> = (
         value={task.type_of_task}
         hovered={isThisRowHovered && hover.field === 'type_of_task'}
         selected={isThisRowSelected && select.field === 'type_of_task'}
+        taskId={task._id}
+        taskRev={task._rev}
+        fieldName='type_of_task'
         onHover={() =>
           onHoverChange({
             id: task._id,
@@ -102,6 +126,9 @@ const Row: FC<TaskRowDisplayProps> = (
         value={task.detail}
         hovered={isThisRowHovered && hover.field === 'detail'}
         selected={isThisRowSelected && select.field === 'detail'}
+        taskId={task._id}
+        taskRev={task._rev}
+        fieldName='detail'
         onHover={() =>
           onHoverChange({ id: task._id, rev: task._rev, field: 'detail' })}
         onClick={() =>
@@ -116,6 +143,9 @@ const Row: FC<TaskRowDisplayProps> = (
         value={task.priority}
         hovered={isThisRowHovered && hover.field === 'priority'}
         selected={isThisRowSelected && select.field === 'priority'}
+        taskId={task._id}
+        taskRev={task._rev}
+        fieldName='priority'
         onHover={() =>
           onHoverChange({ id: task._id, rev: task._rev, field: 'priority' })}
         onClick={() =>
@@ -130,12 +160,16 @@ const Row: FC<TaskRowDisplayProps> = (
         value={task.assignee}
         hovered={isThisRowHovered && hover.field === 'assignee'}
         selected={isThisRowSelected && select.field === 'assignee'}
+        taskId={task._id}
+        taskRev={task._rev}
+        fieldName='assignee'
         onHover={() =>
           onHoverChange({ id: task._id, rev: task._rev, field: 'assignee' })}
         onClick={() =>
           onSelectChange({ id: task._id, rev: task._rev, field: 'assignee' })}
         onCommit={async (value) => await onFieldUpdate(task, 'assignee', value)}
         onCancel={onCancel}
+        participants={participants}
       />
 
       <NumberCell
@@ -143,6 +177,9 @@ const Row: FC<TaskRowDisplayProps> = (
         value={task.eta}
         hovered={isThisRowHovered && hover.field === 'eta'}
         selected={isThisRowSelected && select.field === 'eta'}
+        taskId={task._id}
+        taskRev={task._rev}
+        fieldName='eta'
         onHover={() =>
           onHoverChange({ id: task._id, rev: task._rev, field: 'eta' })}
         onClick={() =>
@@ -157,6 +194,9 @@ const Row: FC<TaskRowDisplayProps> = (
         value={task.progress}
         hovered={isThisRowHovered && hover.field === 'progress'}
         selected={isThisRowSelected && select.field === 'progress'}
+        taskId={task._id}
+        taskRev={task._rev}
+        fieldName='progress'
         onHover={() =>
           onHoverChange({ id: task._id, rev: task._rev, field: 'progress' })}
         onClick={() =>
@@ -172,6 +212,7 @@ const Row: FC<TaskRowDisplayProps> = (
 export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
   {
     task,
+    project,
     colSetting,
     hover,
     select,

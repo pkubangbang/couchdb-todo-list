@@ -88,6 +88,60 @@ offline functionality.
 - **Components**: Fluent UI Northstar with custom patches
 - **Editable Cells**: Custom inline editing with conflict resolution
 
+### Context Hoisting Pattern (Important Design Pattern)
+
+**Purpose**: When a component tree needs access to data from an aggregate root (like
+the `Project` document), hoist that data into a React Context rather than passing
+it through props.
+
+**Rationale**:
+- Project is the aggregation root containing shared data (participants)
+- Task rows need access to participants for the assignee field
+- Passing through props creates unnecessary prop drilling
+- Context allows any descendant component to access the data directly
+
+**Implementation Example**:
+
+```typescript
+// 1. Create a simple context provider
+// ProjectProvider.tsx
+export const projectContext = createContext<Doc<Project> | null>(null);
+
+export const ProjectProvider: FC<{ project: Doc<Project> | null }> = ({
+  project,
+  children
+}) => {
+  return (
+    <projectContext.Provider value={project}>
+      {children}
+    </projectContext.Provider>
+  );
+};
+
+// 2. Wrap the component tree at the appropriate level
+// TaskPage.tsx
+return (
+  <ProjectProvider project={selectedProject}>
+    <TaskTable selectedSprintId={selectedSprintId} />
+  </ProjectProvider>
+);
+
+// 3. Consume the context directly where needed
+// TaskRowDisplay.tsx
+const project = useContext(projectContext);
+const participants = useMemo(() => deriveParticipants(project), [project]);
+```
+
+**When to Apply This Pattern**:
+- Data originates from an aggregate root entity
+- Multiple deep descendant components need access
+- The data is shared state, not per-component state
+- Prop drilling would make the API unwieldy
+
+**Contrast with Props**:
+- Use props for: Component-specific data, event handlers, derived values
+- Use context for: Shared entity data from aggregation roots, global config
+
 ## Key Implementation Details
 
 ### Database Schema
@@ -135,62 +189,6 @@ features including conflict resolution.
 supports normal display mode and a "super row" mode for handling conflicted
 documents.
 
-### Component Structure
-
-**Two Components:**
-
-1. **`Row`** (internal): The core row rendering logic
-2. **`TaskRowDisplay`** (exported): Handles the conditional rendering between
-   normal and conflict modes
-
-### Props
-
-- `task: Doc<Task>` - The task document to display (may include conflicts array)
-- `hover: Coordinate` - Current hover state (id, rev, field)
-- `select: Coordinate` - Current selection state (id, rev, field)
-- `onHoverChange: (coord: Coordinate) => void` - Callback when user hovers over
-  a cell
-- `onSelectChange: (coord: Coordinate) => void` - Callback when user selects a
-  cell
-- `onFieldUpdate: (taskId: string, field: keyof Task, value: string | undefined) => Promise<void>` -
-  Callback to update a field value
-
-### State Logic
-
-```typescript
-const isThisRowHovered = hover.id === task._id && hover.rev === task._rev;
-const isThisRowSelected = select.id === task._id && select.rev === task._rev;
-```
-
-- Both `_id` AND `_rev` are checked for row-level state
-- This prevents stale interactions after a document revision update
-- The `task._id` identifies the document
-- The `task._rev` identifies the specific revision
-
-### Editable Fields (TextCell)
-
-Four fields are editable via `TextCell`:
-
-1. `create_time` (100px width)
-2. `module` (100px width)
-3. `type_of_task` (100px width)
-4. `detail` (300px width)
-
-Each `TextCell` receives:
-
-- `hovered={isThisRowHovered && hover.field === 'fieldName'}` - Cell-level hover
-  state
-- `selected={isThisRowSelected && select.field === 'fieldName'}` - Cell-level
-  selection state
-- `onCommit` - Calls `onFieldUpdate(task._id, fieldName, value)`
-
-### Non-Editable Fields
-
-- `priority` - Input component (read-only in current implementation)
-- `assignee` - Array of names rendered as Pills
-- `eta` - Input component (read-only in current implementation)
-- `progress` - Input component (read-only in current implementation)
-
 ### Super Row (Conflict Handling)
 
 **Trigger Condition:**
@@ -204,17 +202,17 @@ if (task.conflicts && task.conflicts.length) {
 **Super Row Layout:**
 
 ```
-┌─────────────────────────────────────────────────┐
+┌───────────────────────────────────────┐
 │ [!] ┌──────────────────────────────┐  │
-│        │ Winning Revision Row        │  │
-│        └──────────────────────────────┘  │
-│        ┌──────────────────────────────┐  │
-│        │ Conflict Revision 1          │  │
-│        └──────────────────────────────┘  │
-│        ┌──────────────────────────────┐  │
-│        │ Conflict Revision 2          │  │
-│        └──────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
+│     │ Winning Revision Row         │  │
+│     └──────────────────────────────┘  │
+│     ┌──────────────────────────────┐  │
+│     │ Conflict Revision 1          │  │
+│     └──────────────────────────────┘  │
+│     ┌──────────────────────────────┐  │
+│     │ Conflict Revision 2          │  │
+│     └──────────────────────────────┘  │
+└───────────────────────────────────────┘
 ```
 
 **Visual Indicators:**
@@ -248,40 +246,9 @@ if (task.conflicts && task.conflicts.length) {
 3. **Revision-Based Identity**: Using both `_id` and `_rev` for state tracking
    prevents stale interactions after resolution
 
-### Normal Row Rendering
+## Important files
+- `apps/todo-list/src/vite-env.d.ts`: this file contains project-wide types that
+are the core to the biz logic. You can directly use them in the code without
+importing them first.
 
-**Padding:**
-
-```typescript
-<Flex style={{ paddingLeft: 36 }}>
-```
-
-Normal rows have 36px left padding to align with conflict rows (which need space
-for the warning icon).
-
-**Structure:**
-
-```
-┌──────────────────────────────────────┐
-│ create | module | type | detail | ... │  (padded 36px left)
-└──────────────────────────────────────┘
-```
-
-### Coordination with Parent (TaskPage)
-
-The parent `TaskPage` maintains:
-
-- Global `hover` state
-- Global `select` state
-- `handleFieldUpdate` callback that:
-  1. Finds the task by `taskId` in `paddedTasks`
-  2. Compares new value with original (skip if identical)
-  3. Creates updated document with spread
-  4. Calls `db.put()` (generates new `_rev`)
-  5. The database change listener triggers a refresh via `taskListener`
-
-This architecture ensures:
-
-- Real-time UI updates via the changes feed
-- Conflict generation is possible when multiple users edit simultaneously
-- Resolution is manual but guided by visual comparison
+- `TaskPage.tsx`: this file shows a spreadsheet of tasks, it's our focus.
