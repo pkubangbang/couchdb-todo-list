@@ -3,7 +3,8 @@
     "allow": [
       "Bash(deno fmt:*)",
       "Bash(deno task:*)",
-      "mcp__web-search-prime__webSearchPrime"
+      "mcp__web-search-prime__webSearchPrime",
+      "Bash(deno check apps/todo-list/src/components/TaskTable.tsx)"
     ]
   }
 }

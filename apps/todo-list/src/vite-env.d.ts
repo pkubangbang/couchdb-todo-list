@@ -28,9 +28,17 @@ interface Project {
   name: string;
   code: string;
   desc?: string;
-  participants: Record<string, Role[]>;
+  participants: Record<string, {
+    name: string;
+    roles: Role[];
+  }>;
   sprint_ids: string[];
   hasConflict?: boolean;
+}
+
+interface Participant {
+  id: string;
+  name?: string;
 }
 
 interface Sprint {

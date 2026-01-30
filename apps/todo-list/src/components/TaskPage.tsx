@@ -24,8 +24,6 @@ export interface TaskPageProps {
   };
 }
 
-type SortedTask = Doc<Task> & { order: number };
-
 const taskPageStyle = css`
   position: relative;
   height: 100vh;

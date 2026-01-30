@@ -10,12 +10,18 @@ export const NumberCell: FC<BaseCellProps<number>> = ({
   onCommit,
   onCancel,
   value,
-  widthInPx
+  widthInPx,
+  taskId,
+  taskRev,
+  fieldName
 }) => {
   const [state, setState] = useState<EditingState<number>>({ mode: 'read' });
+  const divRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = selected && state.mode === 'edit';
+  // Combine taskId and taskRev for unique cell identification (for superrows)
+  const cellId = taskId && taskRev ? `${taskId}|${taskRev}` : taskId;
 
   const handleClick = () => {
     if (selected) {
@@ -43,7 +49,7 @@ export const NumberCell: FC<BaseCellProps<number>> = ({
   const handleKeyboardInput: KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === 'Enter') {
       handleBlur().then(() => {
-        inputRef.current?.focus();
+        divRef.current?.focus();
       });
     } else if (e.key === 'Escape') {
       setState({ mode: 'read' });
@@ -79,8 +85,19 @@ export const NumberCell: FC<BaseCellProps<number>> = ({
     if (state.mode === 'edit') {
       inputRef.current?.focus();
       inputRef.current?.select();
+    } else {
+      // When exiting edit mode, focus back on the div
+      divRef.current?.focus();
     }
   }, [state.mode]);
+
+  // Cancel editing when selection moves away
+  useEffect(() => {
+    if (!selected && state.mode === 'edit') {
+      setState({ mode: 'read' });
+      onCancel?.();
+    }
+  }, [selected, state.mode, onCancel]);
 
   return isEditing
     ? (
@@ -103,7 +120,7 @@ export const NumberCell: FC<BaseCellProps<number>> = ({
     )
     : (
       <div
-        ref={inputRef}
+        ref={divRef}
         tabIndex={0}
         onClick={handleClick}
         onMouseOver={handleHover}
@@ -111,6 +128,8 @@ export const NumberCell: FC<BaseCellProps<number>> = ({
         className={commonStyle}
         data-hovered={!!hovered}
         data-selected={!!selected}
+        data-cell-id={cellId}
+        data-field={fieldName}
         style={{ width: widthInPx, flex: 'none' }}
       >
         {value !== undefined && value !== null

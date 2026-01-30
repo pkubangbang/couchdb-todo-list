@@ -5,6 +5,9 @@ export interface BaseCellProps<T> {
   hovered?: boolean;
   selected?: boolean;
   widthInPx: number;
+  taskId?: string;
+  taskRev?: string;
+  fieldName?: string;
   onHover?: () => void;
   onClick?: () => void;
   onEdit?: () => void;

@@ -90,11 +90,12 @@ offline functionality.
 
 ### Context Hoisting Pattern (Important Design Pattern)
 
-**Purpose**: When a component tree needs access to data from an aggregate root (like
-the `Project` document), hoist that data into a React Context rather than passing
-it through props.
+**Purpose**: When a component tree needs access to data from an aggregate root
+(like the `Project` document), hoist that data into a React Context rather than
+passing it through props.
 
 **Rationale**:
+
 - Project is the aggregation root containing shared data (participants)
 - Task rows need access to participants for the assignee field
 - Passing through props creates unnecessary prop drilling
@@ -133,12 +134,14 @@ const participants = useMemo(() => deriveParticipants(project), [project]);
 ```
 
 **When to Apply This Pattern**:
+
 - Data originates from an aggregate root entity
 - Multiple deep descendant components need access
 - The data is shared state, not per-component state
 - Prop drilling would make the API unwieldy
 
 **Contrast with Props**:
+
 - Use props for: Component-specific data, event handlers, derived values
 - Use context for: Shared entity data from aggregation roots, global config
 
@@ -247,8 +250,9 @@ if (task.conflicts && task.conflicts.length) {
    prevents stale interactions after resolution
 
 ## Important files
+
 - `apps/todo-list/src/vite-env.d.ts`: this file contains project-wide types that
-are the core to the biz logic. You can directly use them in the code without
-importing them first.
+  are the core to the biz logic. You can directly use them in the code without
+  importing them first.
 
 - `TaskPage.tsx`: this file shows a spreadsheet of tasks, it's our focus.

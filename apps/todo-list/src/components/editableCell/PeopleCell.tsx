@@ -10,11 +10,6 @@ import {
 } from 'react';
 import { BaseCellProps, commonStyle, EditingState } from './common.ts';
 
-interface Participant {
-  id: string;
-  name?: string;
-}
-
 export interface PeopleCellProps extends BaseCellProps<string[]> {
   participants: Participant[];
 }
@@ -60,18 +55,17 @@ export const PeopleCell: FC<PeopleCellProps> = ({
   /* ---------- directory ---------- */
   const directory = useMemo(() => {
     const map = new Map<string, Participant>();
-    participants.forEach(p => map.set(p.id, p));
+    participants.forEach((p) => map.set(p.id, p));
     return map;
   }, [participants]);
 
-  const resolveLabel = (id: string) =>
-    directory.get(id)?.name ?? id;
+  const resolveLabel = (id: string) => directory.get(id)?.name ?? id;
 
   /* ---------- suggestions ---------- */
   const suggestions = useMemo(() => {
     const q = input.toLowerCase();
-    if (!q) return [];
-    return participants.filter(p =>
+    if (!q) { return []; }
+    return participants.filter((p) =>
       p.id.toLowerCase().includes(q) ||
       p.name?.toLowerCase().includes(q)
     );
@@ -133,8 +127,7 @@ export const PeopleCell: FC<PeopleCellProps> = ({
           return;
         }
 
-        const picked =
-          suggestions[activeIndex]?.id ?? input.trim();
+        const picked = suggestions[activeIndex]?.id ?? input.trim();
 
         const next = e.shiftKey
           ? [picked, ...(draft ?? [])]
@@ -150,16 +143,12 @@ export const PeopleCell: FC<PeopleCellProps> = ({
 
       case 'ArrowDown':
         e.preventDefault();
-        setActiveIndex(i =>
-          Math.min(i + 1, suggestions.length - 1)
-        );
+        setActiveIndex((i) => Math.min(i + 1, suggestions.length - 1));
         return;
 
       case 'ArrowUp':
         e.preventDefault();
-        setActiveIndex(i =>
-          Math.max(i - 1, 0)
-        );
+        setActiveIndex((i) => Math.max(i - 1, 0));
         return;
 
       default:
@@ -169,7 +158,7 @@ export const PeopleCell: FC<PeopleCellProps> = ({
 
   /* ---------- drag & drop ---------- */
   const onDrag = (from: number, to: number) => {
-    if (from === to) return;
+    if (from === to) { return; }
     const next = [...(draft ?? [])];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
@@ -197,17 +186,15 @@ export const PeopleCell: FC<PeopleCellProps> = ({
           }
         }}
       >
-        {value.length === 0
-          ? <span>-</span>
-          : value.map(id => (
-            <span
-              key={id}
-              title={id}
-              className={pill}
-            >
-              {resolveLabel(id)}
-            </span>
-          ))}
+        {value.length === 0 ? <span>-</span> : value.map((id) => (
+          <span
+            key={id}
+            title={id}
+            className={pill}
+          >
+            {resolveLabel(id)}
+          </span>
+        ))}
       </div>
     );
   }
@@ -219,23 +206,20 @@ export const PeopleCell: FC<PeopleCellProps> = ({
       className={editorContainer}
       style={{ width: widthInPx }}
     >
-      <Flex wrap gap="gap.smaller" className={editorBox}>
+      <Flex wrap gap='gap.smaller' className={editorBox}>
         {(draft ?? []).map((id, i) => (
           <span
             key={id}
             draggable
             title={id}
             className={pill}
-            onDragStart={e =>
-              e.dataTransfer.setData('index', String(i))
-            }
-            onDragOver={e => e.preventDefault()}
-            onDrop={e =>
+            onDragStart={(e) => e.dataTransfer.setData('index', String(i))}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) =>
               onDrag(
                 Number(e.dataTransfer.getData('index')),
                 i
-              )
-            }
+              )}
           >
             {resolveLabel(id)}
             <span
@@ -243,9 +227,8 @@ export const PeopleCell: FC<PeopleCellProps> = ({
               onClick={() =>
                 setState({
                   mode: 'edit',
-                  draft: (draft ?? []).filter(x => x !== id)
-                })
-              }
+                  draft: (draft ?? []).filter((x) => x !== id)
+                })}
             >
               ×
             </span>
@@ -255,28 +238,29 @@ export const PeopleCell: FC<PeopleCellProps> = ({
         <input
           ref={inputRef}
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
           onKeyDown={onInputKeyDown}
           className={inputBox}
         />
       </Flex>
 
       <Box className={dropdown}>
-          {suggestions.map((p, i) => (
-            <Box
-              key={p.id}
-              className={cx(
-                dropdownItem,
-                i === activeIndex && dropdownItemActive
-              )}
-            >
-              {p.name ?? p.id}
-            </Box>
-          ))}
-          <Text size="small" className={hint}>
-            Enter: Add item · Shift+Enter: Add to front · ↑↓: Navigate · Tab: Autocomplete
-          </Text>
-        </Box>
+        {suggestions.map((p, i) => (
+          <Box
+            key={p.id}
+            className={cx(
+              dropdownItem,
+              i === activeIndex && dropdownItemActive
+            )}
+          >
+            {p.name ?? p.id}
+          </Box>
+        ))}
+        <Text size='small' className={hint}>
+          Enter: Add item · Shift+Enter: Add to front · ↑↓: Navigate · Tab:
+          Autocomplete
+        </Text>
+      </Box>
     </Flex>
   );
 };

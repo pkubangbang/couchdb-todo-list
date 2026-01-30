@@ -6,7 +6,7 @@ import {
 import { FC, useContext, useMemo } from 'react';
 import { Coordinate } from './editableCell/common.ts';
 import { NumberCell } from './editableCell/NumberCell.tsx';
-import { PeopleCell, Participant } from './editableCell/PeopleCell.tsx';
+import { PeopleCell } from './editableCell/PeopleCell.tsx';
 import { TextCell } from './editableCell/TextCell.tsx';
 import { projectContext } from './ProjectProvider.tsx';
 
@@ -30,10 +30,10 @@ export interface TaskRowDisplayProps {
 const deriveParticipants = (
   project: Doc<Project> | null
 ): Participant[] => {
-  if (!project?.participants) return [];
-  return Object.entries(project.participants).map(([id, roles]) => ({
+  if (!project?.participants) { return []; }
+  return Object.entries(project.participants).map(([id, principal]) => ({
     id,
-    name: id // Use id as name since project.participants only stores roles
+    name: principal.name
   }));
 };
 
@@ -212,7 +212,6 @@ const Row: FC<TaskRowDisplayProps> = (
 export const TaskRowDisplay: FC<TaskRowDisplayProps> = (
   {
     task,
-    project,
     colSetting,
     hover,
     select,
