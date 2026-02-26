@@ -22,8 +22,10 @@ export async function fetchConflictingProjectsAndShowMergedResult(
       // different participant will be added
       // same participant with different roles will be appended
       found.hasConflict = true;
+
+      // string list is merged in-place.
       mergeStringList(found.sprint_ids, d.sprint_ids);
-      mergeParticipants(found.participants, d.participants);
+      found.participants = mergeParticipants(found.participants, d.participants);
     }
   }
 
@@ -101,6 +103,13 @@ async function getLosingDocs<T extends object>(
   return batch;
 }
 
+/**
+ * Merges unique items from `incoming` into `original` array in-place.
+ * Items already present in `original` are not duplicated.
+ *
+ * @param original - The target array to merge into (modified in-place)
+ * @param incoming - The source array to merge from
+ */
 function mergeStringList(original: string[], incoming: string[]) {
   const cache = new Set<string>(original);
   for (const item of incoming) {
@@ -111,15 +120,48 @@ function mergeStringList(original: string[], incoming: string[]) {
   }
 }
 
+/**
+ * Normalize participants to the current format.
+ * Historical format: Record<string, string[]> (array of roles)
+ * Current format: Record<string, { name: string; roles: Role[] }>
+ */
+function normalizeParticipants(
+  participants: Project['participants'] | Record<string, string[]> | undefined
+): Project['participants'] {
+  if (!participants) return {};
+
+  const result: Project['participants'] = {};
+  for (const key in participants) {
+    const value = participants[key];
+    if (Array.isArray(value)) {
+      // Historical format: array of roles
+      result[key] = { name: key, roles: value as Role[] };
+    } else {
+      // Current format
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
 function mergeParticipants(
   original: Project['participants'],
   incoming: Project['participants']
 ) {
-  for (const key in incoming) {
-    if (key in original) {
-      mergeStringList(original[key], incoming[key]);
+  const normalizedOriginal = normalizeParticipants(original);
+  const normalizedIncoming = normalizeParticipants(incoming);
+
+  for (const key in normalizedIncoming) {
+    if (key in normalizedOriginal) {
+      // Keep original's name, merge roles
+      mergeStringList(
+        normalizedOriginal[key].roles,
+        normalizedIncoming[key].roles
+      );
     } else {
-      original[key] = incoming[key];
+      normalizedOriginal[key] = { ...normalizedIncoming[key] };
     }
   }
+
+  return normalizedOriginal;
 }
